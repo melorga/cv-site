@@ -1,0 +1,14 @@
+name = "cv-site"
+compatibility_date = "2025-07-29"
+compatibility_flags = ["nodejs_compat"]
+pages_build_output_dir = ".svelte-kit/cloudflare"
+
+# Use this format (array-of-tables):
+[[kv_namespaces]]
+binding = "PROFILE_VECTORS"
+id = "7c958fcfb13b44d491294373f0363330"
+preview_id = "7c958fcfb13b44d491294373f0363330"
+
+[vars]
+TURNSTILE_SECRET = "$TURNSTILE_SECRET"
+GROQ_API_KEY = "$GROQ_API_KEY"

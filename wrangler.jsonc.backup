@@ -1,0 +1,25 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "cv-site",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-02-04",
+  "observability": {
+    "enabled": true
+  },
+  "pages_build_output_dir": ".svelte-kit/cloudflare",
+  "vars": {
+    "TURNSTILE_SECRET": "$TURNSTILE_SECRET",
+    "GROQ_API_KEY": "$GROQ_API_KEY"
+    },
+
+  // Add this to your wrangler.jsonc
+  "kv_namespaces": [
+    {
+      "binding": "KV",
+      "id": "7c958fcfb13b44d491294373f0363330",
+      
+      // Optional: preview_id used when running `wrangler dev` for local dev
+      "preview_id": "7c958fcfb13b44d491294373f0363330"
+    }
+  ]
+}
