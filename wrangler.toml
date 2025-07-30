@@ -6,8 +6,8 @@ pages_build_output_dir = ".svelte-kit/cloudflare"
 # Use this format (array-of-tables):
 [[kv_namespaces]]
 binding = "PROFILE_VECTORS"
-id = "7c958fcfb13b44d491294373f0363330"
-preview_id = "7c958fcfb13b44d491294373f0363330"
+id = "$KV_SECRET"
+preview_id = "KV_SECRET"
 
 [vars]
 TURNSTILE_SECRET = "$TURNSTILE_SECRET"

@@ -16,10 +16,10 @@
   "kv_namespaces": [
     {
       "binding": "KV",
-      "id": "7c958fcfb13b44d491294373f0363330",
+      "id": "$KV_SECRET"
       
       // Optional: preview_id used when running `wrangler dev` for local dev
-      "preview_id": "7c958fcfb13b44d491294373f0363330"
+      "preview_id": "KV_SECRET"
     }
   ]
 }
