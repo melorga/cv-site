@@ -183,13 +183,23 @@
 	}
 
 	function loadTurnstile() {
+		// Check if Turnstile is already loaded to prevent duplicate loading
+		if (document.querySelector('script[src*="turnstile"]')) {
+			renderTurnstile();
+			return;
+		}
+
 		const script = document.createElement('script');
 		script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
 		script.async = true;
 		script.defer = true;
+		// Add explicit loading completion handling
 		script.onload = () => {
-			// turnstileLoaded = true; // Reserved for future state tracking
+			console.log('🔄 Turnstile API loaded');
 			renderTurnstile();
+		};
+		script.onerror = () => {
+			console.error('❌ Failed to load Turnstile API');
 		};
 		document.head.appendChild(script);
 	}
