@@ -1,11 +1,23 @@
 // src/hooks.server.ts
 import type { Handle } from '@sveltejs/kit';
 import { RateLimiterMemory } from 'rate-limiter-flexible';
+import { randomBytes } from 'crypto';
 
 // More aggressive rate limiting for better testing
 const limiter = new RateLimiterMemory({ points: 30, duration: 60 }); // 30 req/min
 
+// Generate a cryptographically secure nonce
+function generateNonce(): string {
+	return randomBytes(16).toString('base64');
+}
+
 export const handle: Handle = async ({ event, resolve }) => {
+	// Generate nonce for this request
+	const nonce = generateNonce();
+	
+	// Make nonce available to the app
+	event.locals.nonce = nonce;
+
 	// Rate limiting
 	try {
 		await limiter.consume(
@@ -16,8 +28,19 @@ export const handle: Handle = async ({ event, resolve }) => {
 		return new Response('Rate limited', { status: 429 });
 	}
 
-	// Resolve the request
-	const response = await resolve(event);
+	// Resolve the request with transformPageChunk to inject nonce
+	const response = await resolve(event, {
+		transformPageChunk: ({ html }) => {
+			// Inject nonce into inline scripts
+			return html.replace(/<script([^>]*)>/g, (match, attrs) => {
+				// Only add nonce to inline scripts (those without src attribute)
+				if (!attrs.includes('src=')) {
+					return `<script${attrs} nonce="${nonce}">`;
+				}
+				return match;
+			});
+		}
+	});
 
 	// Add security headers
 	response.headers.set('X-Content-Type-Options', 'nosniff');
@@ -29,8 +52,8 @@ export const handle: Handle = async ({ event, resolve }) => {
 	// CSP - Secure configuration that maintains functionality
 	const csp = [
 		"default-src 'self'",
-		// Scripts: Restrict to trusted sources only - removed 'unsafe-inline' for better security
-		"script-src 'self' https://challenges.cloudflare.com 'wasm-unsafe-eval'",
+		// Scripts: Restrict to trusted sources only - use nonce for inline scripts
+		`script-src 'self' https://challenges.cloudflare.com 'wasm-unsafe-eval' 'nonce-${nonce}'`,
 		// Styles: Allow self and inline (needed for Tailwind/component styles)
 		"style-src 'self' 'unsafe-inline'",
 		// Images: Allow HTTPS, data URLs, and self
