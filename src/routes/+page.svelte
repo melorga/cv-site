@@ -1,12 +1,18 @@
-<script>
+<script lang="ts">
 	import { onMount } from 'svelte';
 	import { initFirebase, getFirebaseAuth } from '$lib/firebase';
 
 	// Authentication state
-	let user = null;
+	let user: {
+		uid: string;
+		email: string | null;
+		displayName: string | null;
+		photoURL: string | null;
+		emailVerified: boolean;
+	} | null = null;
 	let isInitializing = true;
-	let auth;
-	let firebaseError = null;
+	let auth: import('firebase/auth').Auth | null = null;
+	let firebaseError: string | null = null;
 
 	// Form state
 	let email = '';
@@ -17,7 +23,7 @@
 
 	// Chat state
 	let chatMessage = '';
-	let chatHistory = [];
+	let chatHistory: Array<{ role: string; message: string; timestamp: Date }> = [];
 	let turnstileToken = '';
 	let chatError = '';
 	let isLoading = false;
@@ -63,79 +69,89 @@
 		}
 	}
 
-	onMount(async () => {
+	let cleanupFunction: (() => void) | undefined = undefined;
+
+	onMount(() => {
 		// Initialize theme first
 		initializeTheme();
 
-		try {
-			console.log('🔄 Initializing Firebase...');
-			await initFirebase();
-			auth = getFirebaseAuth();
-			console.log('✅ Firebase initialized successfully');
+		// Run async initialization
+		(async () => {
+			try {
+				console.log('🔄 Initializing Firebase...');
+				await initFirebase();
+				auth = getFirebaseAuth();
+				console.log('✅ Firebase initialized successfully');
 
-			// Listen for auth state changes
-			const { onAuthStateChanged } = await import('firebase/auth');
-			const unsubscribe = onAuthStateChanged(
-				auth,
-				(firebaseUser) => {
-					console.log(
-						'🔄 Auth state changed:',
-						firebaseUser ? `logged in as ${firebaseUser.email}` : 'logged out'
-					);
+				// Listen for auth state changes
+				const { onAuthStateChanged } = await import('firebase/auth');
+				const unsubscribe = onAuthStateChanged(
+					auth,
+					(firebaseUser) => {
+						console.log(
+							'🔄 Auth state changed:',
+							firebaseUser ? `logged in as ${firebaseUser.email}` : 'logged out'
+						);
 
-					if (firebaseUser) {
-						user = {
-							uid: firebaseUser.uid,
-							email: firebaseUser.email,
-							displayName: firebaseUser.displayName,
-							photoURL: firebaseUser.photoURL,
-							emailVerified: firebaseUser.emailVerified
-						};
-						initializeChat();
-					} else {
-						user = null;
-						chatHistory = [];
+						if (firebaseUser) {
+							user = {
+								uid: firebaseUser.uid,
+								email: firebaseUser.email,
+								displayName: firebaseUser.displayName,
+								photoURL: firebaseUser.photoURL,
+								emailVerified: firebaseUser.emailVerified
+							};
+							initializeChat();
+						} else {
+							user = null;
+							chatHistory = [];
+						}
+
+						isInitializing = false;
+						firebaseError = null;
+					},
+					(error: Error) => {
+						console.error('❌ Auth state change error:', error);
+						firebaseError = `Authentication error: ${error.message}`;
+						isInitializing = false;
 					}
+				);
 
-					isInitializing = false;
+				// Store unsubscribe function for cleanup
+				cleanupFunction = unsubscribe;
+			} catch (error: unknown) {
+				console.error('❌ Firebase initialization failed:', error);
+
+				if ((error as Error)?.message === 'DEV_MODE_NO_FIREBASE') {
+					console.log('🚧 Running in development mode without Firebase');
+					// Set development mode - no Firebase, direct to chat
 					firebaseError = null;
-				},
-				(error) => {
-					console.error('❌ Auth state change error:', error);
-					firebaseError = `Authentication error: ${error.message}`;
+					user = {
+						uid: 'dev-user',
+						email: 'dev@mariano.ai',
+						displayName: 'Development User',
+						photoURL: null,
+						emailVerified: true
+					};
+					initializeChat();
+					isInitializing = false;
+				} else {
+					// Real Firebase error
+					firebaseError = `Failed to initialize authentication: ${(error as Error)?.message || 'Unknown error'}`;
 					isInitializing = false;
 				}
-			);
-
-			// Store unsubscribe function for cleanup
-			return () => {
-				if (unsubscribe) unsubscribe();
-			};
-		} catch (error) {
-			console.error('❌ Firebase initialization failed:', error);
-
-			if (error.message === 'DEV_MODE_NO_FIREBASE') {
-				console.log('🚧 Running in development mode without Firebase');
-				// Set development mode - no Firebase, direct to chat
-				firebaseError = null;
-				user = {
-					uid: 'dev-user',
-					email: 'dev@mariano.ai',
-					displayName: 'Development User',
-					photoURL: null,
-					emailVerified: true
-				};
-				initializeChat();
-				isInitializing = false;
-			} else {
-				// Real Firebase error
-				firebaseError = `Failed to initialize authentication: ${error.message}`;
-				isInitializing = false;
 			}
-		}
 
-		// Always load Turnstile regardless of Firebase status
-		loadTurnstile();
+			// Always load Turnstile regardless of Firebase status
+			loadTurnstile();
+		})();
+
+		// Return cleanup function
+		return () => {
+			if (cleanupFunction) {
+				cleanupFunction();
+			}
+		};
 	});
 
 	// Reserved for future use
@@ -170,12 +186,33 @@
 	}
 
 	function renderTurnstile() {
-		if (typeof turnstile !== 'undefined' && document.getElementById('turnstile-widget')) {
+		if (
+			typeof (
+				window as {
+					turnstile?: {
+						render: (
+							selector: string,
+							options: { sitekey: string; theme: string; callback: (token: string) => void }
+						) => void;
+					};
+				}
+			).turnstile !== 'undefined' &&
+			document.getElementById('turnstile-widget')
+		) {
 			try {
-				turnstile.render('#turnstile-widget', {
+				(
+					window as unknown as {
+						turnstile: {
+							render: (
+								selector: string,
+								options: { sitekey: string; theme: string; callback: (token: string) => void }
+							) => void;
+						};
+					}
+				).turnstile.render('#turnstile-widget', {
 					sitekey: import.meta.env.VITE_TURNSTILE_SITEKEY || '0x4AAAAAAA3bU_TJuFdz5kJb',
 					theme: isDarkMode ? 'dark' : 'light',
-					callback: (token) => {
+					callback: (token: string) => {
 						turnstileToken = token;
 						console.log('✅ Turnstile token received');
 					}
@@ -186,10 +223,15 @@
 		}
 	}
 
-	async function handleAuth(event) {
+	async function handleAuth(event: Event) {
 		event.preventDefault();
 		if (!email || !password) {
 			authError = 'Please enter both email and password';
+			return;
+		}
+
+		if (!auth) {
+			authError = 'Authentication service not available';
 			return;
 		}
 
@@ -208,15 +250,16 @@
 				await createUserWithEmailAndPassword(auth, email, password);
 				console.log('Registration successful');
 			}
-		} catch (error) {
+		} catch (error: unknown) {
 			console.error('Authentication error:', error);
-			authError = error.message;
+			authError = (error as import('firebase/auth').AuthError)?.message || 'Authentication failed';
 		} finally {
 			authLoading = false;
 		}
 	}
 
 	async function handleLogout() {
+		if (!auth) return;
 		try {
 			const { signOut } = await import('firebase/auth');
 			await signOut(auth);
@@ -276,14 +319,15 @@
 				const detail = errorData.details || errorData.error || 'Unknown error';
 				throw new Error(`API Error (${response.status}): ${detail}`);
 			}
-		} catch (error) {
+		} catch (error: unknown) {
 			console.error('Chat error:', error);
-			chatError = error.message;
+			const errorMessage = (error as Error)?.message || 'Unknown error';
+			chatError = errorMessage;
 			chatHistory = [
 				...chatHistory,
 				{
 					role: 'assistant',
-					message: `Sorry, I encountered an error: ${error.message}. Please try again.`,
+					message: `Sorry, I encountered an error: ${errorMessage}. Please try again.`,
 					timestamp: new Date()
 				}
 			];
@@ -292,7 +336,7 @@
 		}
 	}
 
-	function handleKeyPress(event) {
+	function handleKeyPress(event: KeyboardEvent) {
 		if (event.key === 'Enter' && !event.shiftKey) {
 			event.preventDefault();
 			sendChat();

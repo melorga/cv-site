@@ -1,8 +1,8 @@
-<script>
+<script lang="ts">
 	import { onMount } from 'svelte';
 	let token = '';
 	onMount(() => {
-		window.turnstileCallback = (t) => {
+		(window as { turnstileCallback?: (token: string) => void }).turnstileCallback = (t: string) => {
 			token = t;
 		}; // Capture token
 	});

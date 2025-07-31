@@ -14,8 +14,9 @@
 		"format": "prettier --write .",
 		"lint": "prettier --check . && eslint .",
 		"test:security": "node scripts/security-test.mjs",
+		"test:with-server": "node scripts/test-with-server.mjs",
 		"validate": "pnpm run format && pnpm run lint && pnpm run check",
-		"deploy:check": "pnpm run validate && pnpm run build && pnpm run test:security"
+		"deploy:check": "echo '🔍 Running validation...' && pnpm run validate && echo '🏗️ Running build...' && pnpm run build && echo '🔒 Starting server and running security tests...' && pnpm run test:with-server && echo '✅ All checks passed!'"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^1.2.5",
