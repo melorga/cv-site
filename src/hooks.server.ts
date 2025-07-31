@@ -48,13 +48,13 @@ export const handle: Handle = async ({ event, resolve }) => {
 	response.headers.set('X-XSS-Protection', '1; mode=block');
 	response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
 	// Updated Permissions-Policy for July 2025 standards - focus on current features only
-	response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=(), usb=(), web-share=()');
+	response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=(), usb=()');
 
 	// CSP - Secure configuration that maintains functionality
 	const csp = [
 		"default-src 'self'",
-		// Scripts: Restrict to trusted sources only - use nonce for inline scripts
-		`script-src 'self' https://challenges.cloudflare.com 'wasm-unsafe-eval' 'nonce-${nonce}'`,
+		// Scripts: Restrict to trusted sources only - use nonce for inline scripts and unsafe-eval for Turnstile
+		`script-src 'self' https://challenges.cloudflare.com 'wasm-unsafe-eval' 'unsafe-eval' 'nonce-${nonce}'`,
 		// Styles: Allow self and inline (needed for Tailwind/component styles)
 		"style-src 'self' 'unsafe-inline'",
 		// Images: Allow HTTPS, data URLs, and self

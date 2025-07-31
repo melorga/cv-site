@@ -211,8 +211,9 @@
 					turnstile?: {
 						render: (
 							selector: string,
-							options: { sitekey: string; theme: string; callback: (token: string) => void }
+							options: { sitekey: string; theme: string; callback: (token: string) => void; 'refresh-expired': string }
 						) => void;
+						reset: (selector: string) => void;
 					};
 				}
 			).turnstile !== 'undefined'
@@ -223,17 +224,19 @@
 						turnstile: {
 							render: (
 								selector: string,
-								options: { sitekey: string; theme: string; callback: (token: string) => void }
+								options: { sitekey: string; theme: string; callback: (token: string) => void; 'refresh-expired': string }
 							) => void;
+							reset: (selector: string) => void;
 						};
 					}
-				).turnstile;
+			).turnstile;
 
 				// Render for authentication form
 				if (document.getElementById('turnstile-widget')) {
 					turnstileAPI.render('#turnstile-widget', {
 						sitekey: import.meta.env.VITE_TURNSTILE_SITEKEY,
 						theme: isDarkMode ? 'dark' : 'light',
+						'refresh-expired': 'auto',
 						callback: (token: string) => {
 							turnstileToken = token;
 							console.log('✅ Turnstile token received (auth)');
@@ -241,9 +244,14 @@
 						'error-callback': (errorCode: string) => {
 							console.error('❌ Turnstile error (auth):', errorCode);
 							// Reset and retry on error
+							turnstileToken = ''; // Clear invalid token
 							setTimeout(() => {
-								renderTurnstile();
-							}, 2000);
+								turnstileAPI.reset('#turnstile-widget');
+							}, 1000);
+						},
+						'expired-callback': () => {
+							console.log('🔄 Turnstile token expired (auth), refreshing...');
+							turnstileToken = ''; // Clear expired token
 						}
 					});
 				}
@@ -253,6 +261,7 @@
 					turnstileAPI.render('#turnstile-widget-chat', {
 						sitekey: import.meta.env.VITE_TURNSTILE_SITEKEY,
 						theme: isDarkMode ? 'dark' : 'light',
+						'refresh-expired': 'auto',
 						callback: (token: string) => {
 							turnstileToken = token;
 							console.log('✅ Turnstile token received (chat)');
@@ -260,9 +269,14 @@
 						'error-callback': (errorCode: string) => {
 							console.error('❌ Turnstile error (chat):', errorCode);
 							// Reset and retry on error
+							turnstileToken = ''; // Clear invalid token
 							setTimeout(() => {
-								renderTurnstile();
-							}, 2000);
+								turnstileAPI.reset('#turnstile-widget-chat');
+							}, 1000);
+						},
+						'expired-callback': () => {
+							console.log('🔄 Turnstile token expired (chat), refreshing...');
+							turnstileToken = ''; // Clear expired token
 						}
 					});
 				}
@@ -717,6 +731,9 @@
 				<div class="flex items-center space-x-4">
 					<div class="flex-1 relative">
 						<textarea
+							id="chat-message"
+							name="chat-message"
+							aria-label="Chat message input"
 							bind:value={chatMessage}
 							on:keypress={handleKeyPress}
 							placeholder="> Enter your query..."
@@ -791,8 +808,11 @@
 						<input
 							type="email"
 							id="email"
+							name="email"
+							autocomplete="email"
 							bind:value={email}
 							required
+							aria-describedby="email-help"
 							class="w-full px-6 py-4 bg-slate-800/50 dark:bg-matrix-dark/50 border border-neon-blue/30 rounded-2xl shadow-lg text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-neon-blue focus:border-transparent transition-all duration-300 font-mono backdrop-blur-sm"
 							placeholder="user@domain.com"
 						/>
@@ -805,8 +825,11 @@
 						<input
 							type="password"
 							id="password"
+							name="password"
+							autocomplete={isLogin ? 'current-password' : 'new-password'}
 							bind:value={password}
 							required
+							aria-describedby="password-help"
 							class="w-full px-6 py-4 bg-slate-800/50 dark:bg-matrix-dark/50 border border-neon-purple/30 rounded-2xl shadow-lg text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-neon-purple focus:border-transparent transition-all duration-300 font-mono backdrop-blur-sm"
 							placeholder="••••••••"
 						/>
