@@ -1,5 +1,5 @@
 <script>
-  import '../app.css'; // Loads Tailwind globally
+	import '../app.css'; // Loads Tailwind globally
 </script>
 
 <slot />

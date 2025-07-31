@@ -12,7 +12,10 @@
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"format": "prettier --write .",
-		"lint": "prettier --check . && eslint ."
+		"lint": "prettier --check . && eslint .",
+		"test:security": "node scripts/security-test.mjs",
+		"validate": "pnpm run format && pnpm run lint && pnpm run check",
+		"deploy:check": "pnpm run validate && pnpm run build && pnpm run test:security"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^1.2.5",

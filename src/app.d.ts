@@ -6,7 +6,13 @@ declare global {
 		// interface Locals {}
 		// interface PageData {}
 		// interface PageState {}
-		// interface Platform {}
+		interface Platform {
+			env: {
+				GROQ_API_KEY: string;
+				TURNSTILE_SECRET: string;
+				PROFILE_VECTORS: KVNamespace;
+			};
+		}
 	}
 }
 
