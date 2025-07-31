@@ -215,11 +215,10 @@
 						) => void;
 					};
 				}
-			).turnstile !== 'undefined' &&
-			document.getElementById('turnstile-widget')
+			).turnstile !== 'undefined'
 		) {
 			try {
-				(
+				const turnstileAPI = (
 					window as unknown as {
 						turnstile: {
 							render: (
@@ -228,23 +227,56 @@
 							) => void;
 						};
 					}
-				).turnstile.render('#turnstile-widget', {
-					sitekey: import.meta.env.VITE_TURNSTILE_SITEKEY,
-					theme: isDarkMode ? 'dark' : 'light',
-					callback: (token: string) => {
-						turnstileToken = token;
-						console.log('✅ Turnstile token received');
-					},
-					'error-callback': (errorCode: string) => {
-						console.error('❌ Turnstile error:', errorCode);
-						// Reset and retry on error
-						setTimeout(() => {
-							renderTurnstile();
-						}, 2000);
-					}
-				});
+				).turnstile;
+
+				// Render for authentication form
+				if (document.getElementById('turnstile-widget')) {
+					turnstileAPI.render('#turnstile-widget', {
+						sitekey: import.meta.env.VITE_TURNSTILE_SITEKEY,
+						theme: isDarkMode ? 'dark' : 'light',
+						callback: (token: string) => {
+							turnstileToken = token;
+							console.log('✅ Turnstile token received (auth)');
+						},
+						'error-callback': (errorCode: string) => {
+							console.error('❌ Turnstile error (auth):', errorCode);
+							// Reset and retry on error
+							setTimeout(() => {
+								renderTurnstile();
+							}, 2000);
+						}
+					});
+				}
+
+				// Render for chat interface
+				if (document.getElementById('turnstile-widget-chat')) {
+					turnstileAPI.render('#turnstile-widget-chat', {
+						sitekey: import.meta.env.VITE_TURNSTILE_SITEKEY,
+						theme: isDarkMode ? 'dark' : 'light',
+						callback: (token: string) => {
+							turnstileToken = token;
+							console.log('✅ Turnstile token received (chat)');
+						},
+						'error-callback': (errorCode: string) => {
+							console.error('❌ Turnstile error (chat):', errorCode);
+							// Reset and retry on error
+							setTimeout(() => {
+								renderTurnstile();
+							}, 2000);
+						}
+					});
+				}
 			} catch (e) {
 				console.warn('Turnstile render failed:', e);
+				// Ensure visibility of Turnstile widgets
+				const authWidget = document.getElementById('turnstile-widget');
+				const chatWidget = document.getElementById('turnstile-widget-chat');
+				if (authWidget) {
+					authWidget.style.display = 'block';
+				}
+				if (chatWidget) {
+					chatWidget.style.display = 'block';
+				}
 			}
 		}
 	}
@@ -693,6 +725,8 @@
 						></textarea>
 						<div class="absolute bottom-2 right-2 text-xs text-gray-500 font-mono"></div>
 					</div>
+					<!-- Add Turnstile widget for chat verification -->
+					<div id="turnstile-widget-chat" class="flex justify-center py-2"></div>
 					<button
 						on:click={sendChat}
 						disabled={!chatMessage.trim()}
