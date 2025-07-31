@@ -53,13 +53,20 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 
 		console.log('Message validation passed');
 
-		// Verify Turnstile token if in production
-		if (import.meta.env.PROD && turnstileToken && platform?.env?.TURNSTILE_SECRET) {
+		// Verify Turnstile token (required for all requests)
+		if (!turnstileToken || typeof turnstileToken !== 'string') {
+			console.log('Missing or invalid Turnstile token');
+			return json({ error: 'CAPTCHA token required' }, { status: 403 });
+		}
+
+		// Validate Turnstile token
+		if (platform?.env?.TURNSTILE_SECRET) {
 			try {
+				console.log('Validating Turnstile token');
 				const formData = new FormData();
 				formData.append('secret', platform.env.TURNSTILE_SECRET);
 				formData.append('response', turnstileToken);
-				formData.append('remoteip', request.headers.get('cf-connecting-ip') || '');
+				formData.append('remoteip', request.headers.get('cf-connecting-ip') || request.headers.get('x-forwarded-for') || '');
 
 				const turnstileResponse = await fetch(
 					'https://challenges.cloudflare.com/turnstile/v0/siteverify',
@@ -70,13 +77,22 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 				);
 
 				const turnstileResult = await turnstileResponse.json();
+				console.log('Turnstile validation result:', turnstileResult);
+				
 				if (!turnstileResult.success) {
-					return json({ error: 'CAPTCHA verification failed' }, { status: 403 });
+					console.log('Turnstile validation failed:', turnstileResult['error-codes']);
+					return json({ 
+						error: 'CAPTCHA verification failed',
+						details: import.meta.env.DEV ? turnstileResult['error-codes'] : undefined
+					}, { status: 403 });
 				}
+				console.log('Turnstile validation successful');
 			} catch (turnstileError) {
-				console.warn('Turnstile verification failed:', turnstileError);
+				console.error('Turnstile verification error:', turnstileError);
 				return json({ error: 'CAPTCHA verification error' }, { status: 500 });
 			}
+		} else {
+			console.warn('TURNSTILE_SECRET not configured, skipping validation');
 		}
 
 		// Validate environment variables

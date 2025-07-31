@@ -53,7 +53,8 @@ export const handle: Handle = async ({ event, resolve }) => {
 	// CSP - Secure configuration that maintains functionality
 	const csp = [
 		"default-src 'self'",
-		// Scripts: Restrict to trusted sources only - use nonce for inline scripts and unsafe-eval for Turnstile
+		// Scripts: Restrict to trusted sources only - use nonce for inline scripts
+		// Note: 'unsafe-eval' is required for Cloudflare Turnstile to function properly
 		`script-src 'self' https://challenges.cloudflare.com 'wasm-unsafe-eval' 'unsafe-eval' 'nonce-${nonce}'`,
 		// Styles: Allow self and inline (needed for Tailwind/component styles)
 		"style-src 'self' 'unsafe-inline'",

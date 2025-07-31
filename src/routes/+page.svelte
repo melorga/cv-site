@@ -183,6 +183,23 @@
 	}
 
 	function loadTurnstile() {
+		// Add feature detection for modern storage APIs
+		if (typeof navigator !== 'undefined' && 'storage' in navigator) {
+			// Modern navigator.storage is available, suppress warnings for third-party code
+			const originalWarn = console.warn;
+			console.warn = (...args) => {
+				if (args[0]?.includes?.('StorageType.persistent')) {
+					// Suppress Turnstile's deprecated storage API warnings
+					return;
+				}
+				originalWarn.apply(console, args);
+			};
+			// Restore original console.warn after a delay
+			setTimeout(() => {
+				console.warn = originalWarn;
+			}, 5000);
+		}
+
 		// Check if Turnstile is already loaded to prevent duplicate loading
 		if (document.querySelector('script[src*="turnstile"]')) {
 			renderTurnstile();
