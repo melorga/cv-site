@@ -3,11 +3,10 @@ compatibility_date = "2025-07-29"
 compatibility_flags = ["nodejs_compat"]
 pages_build_output_dir = ".svelte-kit/cloudflare"
 
-# KV Namespaces - IDs will be set via Dashboard Environment Variables
-[[kv_namespaces]]
-binding = "PROFILE_VECTORS"
-# id will be set via KV_SECRET_ID environment variable in dashboard
-# preview_id will be set via KV_PREVIEW_ID environment variable in dashboard
+# KV Namespaces are configured via Cloudflare Dashboard
+# Go to your Pages project → Settings → Functions → KV namespace bindings
+# Add binding: PROFILE_VECTORS → your KV namespace
+# This keeps the namespace ID secure and out of the public repo
 
 # Runtime environment variables are managed via Cloudflare Dashboard
 # These are accessed in code via platform.env.VARIABLE_NAME
