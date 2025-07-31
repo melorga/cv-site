@@ -7,6 +7,12 @@ KV_SECRET_ID = "$KV_SECRET_ID"
 name = "melorga"
 pages_build_output_dir = ".svelte-kit/cloudflare"
 compatibility_date = "2025-07-29"
+compatibility_flags = [ "nodejs_compat" ]
+
+[[kv_namespaces]]
+binding = "PROFILE_VECTORS"
+id = "${KV_SECRET_ID}"
+preview_id = "${KV_SECRET_ID}"
 
 [env.production]
 compatibility_flags = [ "nodejs_compat" ]

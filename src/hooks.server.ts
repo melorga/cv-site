@@ -14,7 +14,7 @@ function generateNonce(): string {
 export const handle: Handle = async ({ event, resolve }) => {
 	// Generate nonce for this request
 	const nonce = generateNonce();
-	
+
 	// Make nonce available to the app
 	event.locals.nonce = nonce;
 
