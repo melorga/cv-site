@@ -1,7 +1,7 @@
 // src/hooks.server.ts
 import type { Handle } from '@sveltejs/kit';
 import { RateLimiterMemory } from 'rate-limiter-flexible';
-import { randomBytes } from 'crypto';
+import { randomBytes } from 'node:crypto';
 
 // More aggressive rate limiting for better testing
 const limiter = new RateLimiterMemory({ points: 30, duration: 60 }); // 30 req/min
