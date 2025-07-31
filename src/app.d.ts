@@ -10,6 +10,7 @@ declare global {
 			env: {
 				GROQ_API_KEY: string;
 				TURNSTILE_SECRET: string;
+				KV_SECRET_ID: string;
 				PROFILE_VECTORS: KVNamespace;
 			};
 		}

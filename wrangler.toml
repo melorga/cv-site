@@ -3,12 +3,12 @@ compatibility_date = "2025-07-29"
 compatibility_flags = ["nodejs_compat"]
 pages_build_output_dir = ".svelte-kit/cloudflare"
 
-# Use this format (array-of-tables):
+# KV Namespaces - IDs will be set via Dashboard Environment Variables
 [[kv_namespaces]]
 binding = "PROFILE_VECTORS"
-id = "$PROFILE_VECTORS"
-preview_id = "$PROFILE_VECTORS"
+# id will be set via KV_SECRET_ID environment variable in dashboard
+# preview_id will be set via KV_PREVIEW_ID environment variable in dashboard
 
-[vars]
-TURNSTILE_SECRET = "$TURNSTILE_SECRET"
-GROQ_API_KEY = "$GROQ_API_KEY"
+# Runtime environment variables are managed via Cloudflare Dashboard
+# These are accessed in code via platform.env.VARIABLE_NAME
+# Do NOT set secrets here - use Dashboard Secrets instead
