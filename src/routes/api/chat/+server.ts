@@ -28,36 +28,52 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 			return json({ error: 'Invalid JSON format' }, { status: 400 });
 		}
 
-		const { message, turnstileToken } = parsedBody;
+	const { message, turnstileToken } = parsedBody;
 
-		// Validate message
-		if (!message || typeof message !== 'string') {
-			return json({ error: 'Message is required and must be a string' }, { status: 400 });
-		}
+	// Get client IP for logging
+	const clientIP = request.headers.get('CF-Connecting-IP') || 
+					 request.headers.get('x-forwarded-for') || 
+					 request.headers.get('x-real-ip') || 
+					 'unknown';
 
-		if (message.length > 1000) {
-			return json({ error: 'Message too long (max 1000 characters)' }, { status: 400 });
-		}
+	console.log(`[SECURITY] Chat request from IP: ${clientIP}`);
+	console.log(`[SECURITY] User-Agent: ${request.headers.get('user-agent') || 'unknown'}`);
+	console.log(`[SECURITY] Request timestamp: ${new Date().toISOString()}`);
 
-		// Basic content filtering
-		const suspiciousPatterns = [
-			/\b(exec|eval|system|shell|cmd)\s*\(/i,
-			/<script[^>]*>.*<\/script>/i,
-			/javascript:/i,
-			/(union|select|insert|update|delete|drop)\s+/i
-		];
+	// Validate message
+	if (!message || typeof message !== 'string') {
+		console.log(`[SECURITY] Invalid message format from IP: ${clientIP}`);
+		return json({ error: 'Message is required and must be a string' }, { status: 400 });
+	}
 
-		if (suspiciousPatterns.some((pattern) => pattern.test(message))) {
-			return json({ error: 'Invalid message content' }, { status: 400 });
-		}
+	if (message.length > 1000) {
+		console.log(`[SECURITY] Message too long (${message.length} chars) from IP: ${clientIP}`);
+		return json({ error: 'Message too long (max 1000 characters)' }, { status: 400 });
+	}
 
-		console.log('Message validation passed');
+	// Basic content filtering
+	const suspiciousPatterns = [
+		/\b(exec|eval|system|shell|cmd)\s*\(/i,
+		/\<script[^\>]*\>.*\<\/script\>/i,
+		/javascript:/i,
+		/(union|select|insert|update|delete|drop)\s+/i
+	];
 
-		// Verify Turnstile token (required for all requests)
-		if (!turnstileToken || typeof turnstileToken !== 'string') {
-			console.log('Missing or invalid Turnstile token');
-			return json({ error: 'CAPTCHA token required' }, { status: 403 });
-		}
+	if (suspiciousPatterns.some((pattern) => pattern.test(message))) {
+		console.log(`[SECURITY] Suspicious content detected from IP: ${clientIP} - Message: ${message.substring(0, 100)}...`);
+		return json({ error: 'Invalid message content' }, { status: 400 });
+	}
+
+	console.log(`[SECURITY] Message validation passed for IP: ${clientIP}`);
+
+	// Verify Turnstile token (required for all requests)
+	if (!turnstileToken || typeof turnstileToken !== 'string') {
+		console.log(`[SECURITY] Missing or invalid Turnstile token from IP: ${clientIP}`);
+		return json({ 
+			error: 'CAPTCHA token required',
+			details: 'Security verification failed - please complete the CAPTCHA'
+		}, { status: 403 });
+	}
 
 		// Validate Turnstile token
 		if (platform?.env?.TURNSTILE_SECRET) {

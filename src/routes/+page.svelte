@@ -360,7 +360,21 @@
 	}
 
 	async function sendChat() {
-		if (!chatMessage.trim()) return;
+		if (!chatMessage.trim()) {
+			console.log('⚠️ Empty message, skipping send');
+			return;
+		}
+
+		// Validate Turnstile token before proceeding
+		console.log('🔐 Checking Turnstile token...');
+		console.log('🔐 Current turnstileToken:', turnstileToken ? `${turnstileToken.substring(0, 20)}...` : 'NONE');
+		console.log('🔐 Token length:', turnstileToken ? turnstileToken.length : 0);
+		
+		if (!turnstileToken) {
+			console.error('❌ No Turnstile token available');
+			chatError = 'CAPTCHA verification required. Please complete the security challenge.';
+			return;
+		}
 
 		// Add user message to history
 		const userMessage = {
@@ -386,7 +400,12 @@
 		chatError = '';
 
 		try {
-			console.log('Sending chat message:', currentMessage);
+			console.log('📤 Sending chat message:', currentMessage);
+			console.log('📤 Request payload:', {
+				message: currentMessage,
+				turnstileToken: turnstileToken.substring(0, 20) + '...'
+			});
+
 			const response = await fetch('/api/chat', {
 				method: 'POST',
 				headers: {
@@ -398,11 +417,12 @@
 				})
 			});
 
-			console.log('Chat API response status:', response.status);
+			console.log('📥 Chat API response status:', response.status);
+			console.log('📥 Response headers:', Object.fromEntries(response.headers.entries()));
 
 			if (response.ok) {
 				const data = await response.json();
-				console.log('Chat API response:', data);
+				console.log('✅ Chat API response data:', data);
 			chatHistory = [
 				...chatHistory,
 				{
@@ -411,6 +431,10 @@
 					timestamp: new Date()
 				}
 			];
+
+			// Reset Turnstile after successful message
+			console.log('🔄 Resetting Turnstile after successful chat');
+			resetTurnstile();
 
 			// Scroll to the latest message after AI responds
 			setTimeout(() => {
@@ -423,20 +447,34 @@
 			}, 100); // Slightly longer delay to ensure DOM update
 			} else {
 				const errorData = await response.json();
-				console.error('Chat API error:', errorData);
+				console.error('❌ Chat API error response:', {
+					status: response.status,
+					statusText: response.statusText,
+					errorData
+				});
+				
+				// Reset Turnstile on error to allow retry
+				console.log('🔄 Resetting Turnstile after error');
+				resetTurnstile();
+				
 				// Make the error message more descriptive
 				const detail = errorData.details || errorData.error || 'Unknown error';
 				throw new Error(`API Error (${response.status}): ${detail}`);
 			}
 		} catch (error: unknown) {
-			console.error('Chat error:', error);
+			console.error('❌ Chat error:', error);
 			const errorMessage = (error as Error)?.message || 'Unknown error';
 			chatError = errorMessage;
+			
+			// Reset Turnstile on error
+			console.log('🔄 Resetting Turnstile after catch error');
+			resetTurnstile();
+			
 		chatHistory = [
 				...chatHistory,
 				{
 					role: 'assistant',
-					message: `Sorry, I encountered an error: ${errorMessage}. Please try again.`,
+					message: `Sorry, I encountered an error: ${errorMessage}. Please complete the CAPTCHA again and try again.`,
 					timestamp: new Date()
 				}
 			];
@@ -452,6 +490,30 @@
 			}, 100);
 		} finally {
 			isLoading = false;
+		}
+	}
+
+	function resetTurnstile() {
+		console.log('🔄 Resetting Turnstile widget...');
+		turnstileToken = '';
+		
+		if (typeof (window as any).turnstile !== 'undefined') {
+			try {
+				// Reset chat widget
+				if (document.getElementById('turnstile-widget-chat')) {
+					(window as any).turnstile.reset('#turnstile-widget-chat');
+					console.log('✅ Chat Turnstile widget reset');
+				}
+				// Reset auth widget  
+				if (document.getElementById('turnstile-widget')) {
+					(window as any).turnstile.reset('#turnstile-widget');
+					console.log('✅ Auth Turnstile widget reset');
+				}
+			} catch (e) {
+				console.error('❌ Error resetting Turnstile:', e);
+			}
+		} else {
+			console.warn('⚠️ Turnstile API not available for reset');
 		}
 	}
 
