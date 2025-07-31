@@ -219,11 +219,18 @@
 						};
 					}
 				).turnstile.render('#turnstile-widget', {
-					sitekey: import.meta.env.VITE_TURNSTILE_SITEKEY || '0x4AAAAAAA3bU_TJuFdz5kJb',
+					sitekey: import.meta.env.VITE_TURNSTILE_SITEKEY,
 					theme: isDarkMode ? 'dark' : 'light',
 					callback: (token: string) => {
 						turnstileToken = token;
 						console.log('✅ Turnstile token received');
+					},
+					'error-callback': (errorCode: string) => {
+						console.error('❌ Turnstile error:', errorCode);
+						// Reset and retry on error
+						setTimeout(() => {
+							renderTurnstile();
+						}, 2000);
 					}
 				});
 			} catch (e) {
