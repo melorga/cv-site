@@ -33,6 +33,7 @@
 	let isDarkMode = false;
 	let isHighContrast = false;
 	// let isTyping = false; // Reserved for future typing indicator
+	let chatContainer: HTMLElement | null = null;
 
 	// Theme toggle functions
 	function toggleDarkMode() {
@@ -171,6 +172,14 @@
 				timestamp: new Date()
 			}
 		];
+
+		// Scroll to the latest message upon chat initialization
+		setTimeout(() => {
+			chatContainer = document.querySelector('.custom-scrollbar');
+			if (chatContainer) {
+				chatContainer.scrollTop = chatContainer.scrollHeight;
+			}
+		}, 0);
 	}
 
 	function loadTurnstile() {
@@ -281,6 +290,16 @@
 		};
 		chatHistory = [...chatHistory, userMessage];
 
+		// Scroll to the latest message after user sends a new message
+		setTimeout(() => {
+			if (!chatContainer) {
+				chatContainer = document.querySelector('.custom-scrollbar');
+			}
+			if (chatContainer) {
+				chatContainer.scrollTop = chatContainer.scrollHeight;
+			}
+		}, 0);
+
 		const currentMessage = chatMessage;
 		chatMessage = '';
 		isLoading = true;
@@ -304,14 +323,24 @@
 			if (response.ok) {
 				const data = await response.json();
 				console.log('Chat API response:', data);
-				chatHistory = [
-					...chatHistory,
-					{
-						role: 'assistant',
-						message: data.response,
-						timestamp: new Date()
-					}
-				];
+			chatHistory = [
+				...chatHistory,
+				{
+					role: 'assistant',
+					message: data.response,
+					timestamp: new Date()
+				}
+			];
+
+			// Scroll to the latest message after AI responds
+			setTimeout(() => {
+				if (!chatContainer) {
+					chatContainer = document.querySelector('.custom-scrollbar');
+				}
+				if (chatContainer) {
+					chatContainer.scrollTop = chatContainer.scrollHeight;
+				}
+			}, 100); // Slightly longer delay to ensure DOM update
 			} else {
 				const errorData = await response.json();
 				console.error('Chat API error:', errorData);
@@ -323,7 +352,7 @@
 			console.error('Chat error:', error);
 			const errorMessage = (error as Error)?.message || 'Unknown error';
 			chatError = errorMessage;
-			chatHistory = [
+		chatHistory = [
 				...chatHistory,
 				{
 					role: 'assistant',
@@ -331,6 +360,16 @@
 					timestamp: new Date()
 				}
 			];
+
+			// Scroll to the error message
+			setTimeout(() => {
+				if (!chatContainer) {
+					chatContainer = document.querySelector('.custom-scrollbar');
+				}
+				if (chatContainer) {
+					chatContainer.scrollTop = chatContainer.scrollHeight;
+				}
+			}, 100);
 		} finally {
 			isLoading = false;
 		}
