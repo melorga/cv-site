@@ -61,7 +61,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 		// Fonts: Allow self and data URLs
 		"font-src 'self' data:",
 		// Connections: Restrict to necessary APIs only
-		"connect-src 'self' https://api.groq.com https://challenges.cloudflare.com",
+		"connect-src 'self' https://api.groq.com https://challenges.cloudflare.com https://*.firebaseio.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com",
 		// Frames: Only Turnstile
 		'frame-src https://challenges.cloudflare.com',
 		// Workers: Allow self for SvelteKit service workers
