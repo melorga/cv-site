@@ -173,16 +173,33 @@
 			}
 		];
 
-		// Scroll to the latest message upon chat initialization
+		// Clear previous token (from login screen) and re-render Turnstile for chat
+		turnstileToken = '';
+		console.log('🚀 Initializing chat - clearing old token and re-rendering Turnstile');
+		
+		// Re-render Turnstile for chat interface after DOM is ready
 		setTimeout(() => {
 			chatContainer = document.querySelector('.custom-scrollbar');
 			if (chatContainer) {
 				chatContainer.scrollTop = chatContainer.scrollHeight;
 			}
-		}, 0);
+			// Force re-render Turnstile widgets for chat
+			renderTurnstile();
+		}, 100);
 	}
 
 	function loadTurnstile() {
+		// Debug: Check sitekey availability
+		const sitekey = import.meta.env.VITE_TURNSTILE_SITEKEY;
+		console.log('🔑 TURNSTILE SITEKEY:', sitekey ? `${sitekey.substring(0, 10)}...` : 'MISSING');
+		console.log('🔑 All VITE env vars:', Object.keys(import.meta.env).filter(k => k.startsWith('VITE_')));
+		
+		if (!sitekey || sitekey === 'undefined') {
+			console.error('❌ VITE_TURNSTILE_SITEKEY is missing or undefined!');
+			console.error('❌ Make sure to set VITE_TURNSTILE_SITEKEY in your .env.local file');
+			return;
+		}
+
 		// Add feature detection for modern storage APIs
 		if (typeof navigator !== 'undefined' && 'storage' in navigator) {
 			// Modern navigator.storage is available, suppress warnings for third-party code
@@ -202,26 +219,40 @@
 
 		// Check if Turnstile is already loaded to prevent duplicate loading
 		if (document.querySelector('script[src*="turnstile"]')) {
+			console.log('🔄 Turnstile script already exists, rendering...');
 			renderTurnstile();
 			return;
 		}
 
+		console.log('📥 Loading Turnstile API script...');
 		const script = document.createElement('script');
 		script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
 		script.async = true;
 		script.defer = true;
 		// Add explicit loading completion handling
 		script.onload = () => {
-			console.log('🔄 Turnstile API loaded');
+			console.log('✅ Turnstile API loaded successfully');
 			renderTurnstile();
 		};
-		script.onerror = () => {
-			console.error('❌ Failed to load Turnstile API');
+		script.onerror = (err) => {
+			console.error('❌ Failed to load Turnstile API:', err);
 		};
 		document.head.appendChild(script);
+		console.log('📤 Turnstile script added to DOM');
 	}
 
 	function renderTurnstile() {
+		console.log('🎨 renderTurnstile called');
+		console.log('🎨 Window turnstile available:', typeof (window as any).turnstile);
+		
+		const sitekey = import.meta.env.VITE_TURNSTILE_SITEKEY;
+		console.log('🎨 Sitekey for render:', sitekey ? `${sitekey.substring(0, 10)}...` : 'MISSING');
+		
+		if (!sitekey) {
+			console.error('❌ Cannot render Turnstile without sitekey');
+			return;
+		}
+
 		if (
 			typeof (
 				window as {
@@ -274,14 +305,17 @@
 				}
 
 				// Render for chat interface
-				if (document.getElementById('turnstile-widget-chat')) {
+				const chatWidget = document.getElementById('turnstile-widget-chat');
+				console.log('🎨 Chat widget element found:', !!chatWidget);
+				if (chatWidget) {
+					console.log('🎨 Rendering chat Turnstile widget...');
 					turnstileAPI.render('#turnstile-widget-chat', {
 						sitekey: import.meta.env.VITE_TURNSTILE_SITEKEY,
 						theme: isDarkMode ? 'dark' : 'light',
 						'refresh-expired': 'auto',
 						callback: (token: string) => {
 							turnstileToken = token;
-							console.log('✅ Turnstile token received (chat)');
+							console.log('✅ Turnstile token received (chat):', token.substring(0, 20) + '...');
 						},
 						'error-callback': (errorCode: string) => {
 							console.error('❌ Turnstile error (chat):', errorCode);
@@ -296,6 +330,9 @@
 							turnstileToken = ''; // Clear expired token
 						}
 					});
+					console.log('🎨 Chat Turnstile widget rendered');
+				} else {
+					console.error('❌ Chat widget element #turnstile-widget-chat not found in DOM');
 				}
 			} catch (e) {
 				console.warn('Turnstile render failed:', e);
