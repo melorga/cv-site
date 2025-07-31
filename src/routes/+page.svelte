@@ -68,33 +68,64 @@
     initializeTheme();
     
     try {
-      console.log('Attempting Firebase initialization...');
+      console.log('🔄 Initializing Firebase...');
       await initFirebase();
       auth = getFirebaseAuth();
-      console.log('Firebase initialized successfully');
+      console.log('✅ Firebase initialized successfully');
       
       // Listen for auth state changes
       const { onAuthStateChanged } = await import('firebase/auth');
-      onAuthStateChanged(auth, (firebaseUser) => {
-        console.log('Auth state changed:', firebaseUser ? 'logged in' : 'logged out');
+      const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+        console.log('🔄 Auth state changed:', firebaseUser ? `logged in as ${firebaseUser.email}` : 'logged out');
+        
         if (firebaseUser) {
-          user = firebaseUser;
+          user = {
+            uid: firebaseUser.uid,
+            email: firebaseUser.email,
+            displayName: firebaseUser.displayName,
+            photoURL: firebaseUser.photoURL,
+            emailVerified: firebaseUser.emailVerified
+          };
           initializeChat();
         } else {
           user = null;
+          chatHistory = [];
         }
+        
+        isInitializing = false;
+        firebaseError = null;
+      }, (error) => {
+        console.error('❌ Auth state change error:', error);
+        firebaseError = `Authentication error: ${error.message}`;
         isInitializing = false;
       });
       
-    } catch (error) {
-      console.error('Firebase initialization failed:', error);
-      console.log('Continuing in development mode without Firebase authentication');
+      // Store unsubscribe function for cleanup
+      return () => {
+        if (unsubscribe) unsubscribe();
+      };
       
-      // Set development mode - no Firebase, direct to chat
-      firebaseError = null;
-      user = { email: 'dev@example.com', uid: 'dev-user' };
-      initializeChat();
-      isInitializing = false;
+    } catch (error) {
+      console.error('❌ Firebase initialization failed:', error);
+      
+      if (error.message === 'DEV_MODE_NO_FIREBASE') {
+        console.log('🚧 Running in development mode without Firebase');
+        // Set development mode - no Firebase, direct to chat
+        firebaseError = null;
+        user = { 
+          uid: 'dev-user', 
+          email: 'dev@mariano.ai',
+          displayName: 'Development User',
+          photoURL: null,
+          emailVerified: true
+        };
+        initializeChat();
+        isInitializing = false;
+      } else {
+        // Real Firebase error
+        firebaseError = `Failed to initialize authentication: ${error.message}`;
+        isInitializing = false;
+      }
     }
     
     // Always load Turnstile regardless of Firebase status
@@ -133,11 +164,11 @@
     if (typeof turnstile !== 'undefined' && document.getElementById('turnstile-widget')) {
       try {
         turnstile.render('#turnstile-widget', {
-          sitekey: '0x4AAAAAAA3bU_TJuFdz5kJb', // Default test key, replace with your actual key
-          theme: 'light',
+          sitekey: import.meta.env.VITE_TURNSTILE_SITEKEY || '0x4AAAAAAA3bU_TJuFdz5kJb',
+          theme: isDarkMode ? 'dark' : 'light',
           callback: (token) => {
             turnstileToken = token;
-            console.log('Turnstile token received');
+            console.log('✅ Turnstile token received');
           }
         });
       } catch (e) {
@@ -330,17 +361,19 @@
           </div>
           <div>
             <h1 class="text-4xl font-black font-display tracking-tight neon-text bg-gradient-to-r from-neon-blue via-neon-purple to-neon-green bg-clip-text text-transparent">MARIANO.AI</h1>
-            <p class="text-sm opacity-80 font-mono text-neon-blue tracking-wider">[NEURAL_INTERFACE_v2.1]</p>
+            <p class="text-sm opacity-80 font-mono text-neon-blue tracking-wider">[v0.06]</p>
           </div>
         </div>
         <div class="flex items-center space-x-4 z-10">
           <button on:click={toggleHighContrast} 
+                  aria-label="Toggle high contrast mode"
                   class="p-3 rounded-2xl bg-gradient-to-r from-neon-purple/20 to-neon-pink/20 hover:from-neon-purple/40 hover:to-neon-pink/40 transition-all duration-300 transform hover:scale-110 border border-neon-purple/30">
             <svg class="w-5 h-5 text-neon-purple" fill="currentColor" viewBox="0 0 20 20">
               <path d="M10 2L3 7v11h5v-6h4v6h5V7l-7-5zM8 15H5v-2h3v2zm0-4H5V9h3v2zm7 4h-3v-2h3v2zm0-4h-3V9h3v2z"/>
             </svg>
           </button>
           <button on:click={toggleDarkMode} 
+                  aria-label="Toggle dark mode"
                   class="p-3 rounded-2xl bg-gradient-to-r from-neon-blue/20 to-neon-green/20 hover:from-neon-blue/40 hover:to-neon-green/40 transition-all duration-300 transform hover:scale-110 border border-neon-blue/30">
             <svg class="w-5 h-5 text-neon-blue" fill="currentColor" viewBox="0 0 20 20">
               {#if isDarkMode}
@@ -363,11 +396,11 @@
         </div>
       </header>
 
-      <div class="flex-1 p-8 overflow-y-auto space-y-6 custom-scrollbar bg-gradient-to-b from-transparent via-slate-50/5 to-transparent dark:via-gray-900/20">
+<div class="flex-1 p-8 overflow-y-auto space-y-6 custom-scrollbar bg-gradient-to-b from-transparent via-slate-50/5 to-transparent dark:via-gray-900/20 flex-grow h-full">
         {#each chatHistory as entry}
           <div class={`flex ${entry.role === 'user' ? 'justify-end' : 'justify-start'} transform transition-all duration-300 hover:scale-[1.02]`}>
             {#if entry.role === 'user'}
-              <div class="max-w-2xl px-6 py-4 rounded-2xl shadow-lg bg-gradient-to-r from-neon-blue/90 to-neon-purple/90 text-white border border-neon-blue/30 backdrop-blur-sm">
+              <div class="max-w-2xl px-6 py-4 rounded-2xl shadow-lg bg-gradient-to-r from-neon-blue/90 to-neon-purple/90 text-white border-neon-blue/30 backdrop-blur-sm">
                 <p class="font-medium leading-relaxed">{entry.message}</p>
                 <span class="text-xs text-white/70 block text-right mt-2 font-mono">{new Date(entry.timestamp).toLocaleTimeString()}</span>
               </div>
@@ -416,19 +449,19 @@
         {/if}
       </div>
 
-      <footer class="bg-gradient-to-r from-slate-900/95 via-blue-900/95 to-indigo-900/95 dark:from-matrix-darker/95 dark:via-matrix-dark/95 dark:to-gray-900/95 p-6 border-t border-neon-blue/30 backdrop-blur-xl">
-        <div class="flex items-end space-x-4">
+<footer class="bg-gradient-to-r from-slate-900/95 via-blue-900/95 to-indigo-900/95 dark:from-matrix-darker/95 dark:via-matrix-dark/95 dark:to-gray-900/95 p-6 border-t border-neon-blue/30 backdrop-blur-xl mt-auto">
+        <div class="flex items-center space-x-4">
           <div class="flex-1 relative">
             <textarea bind:value={chatMessage} 
                       on:keypress={handleKeyPress}
                       placeholder="> Enter your query..."
                       class="w-full px-6 py-4 bg-slate-800/50 dark:bg-matrix-dark/50 border border-neon-blue/30 rounded-2xl shadow-lg text-gray-100 placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-neon-blue focus:border-transparent transition-all duration-300 font-mono backdrop-blur-sm"
                       rows="1"></textarea>
-            <div class="absolute bottom-2 right-2 text-xs text-gray-500 font-mono">[CTRL+ENTER]</div>
+            <div class="absolute bottom-2 right-2 text-xs text-gray-500 font-mono"></div>
           </div>
           <button on:click={sendChat} 
                   disabled={!chatMessage.trim()}
-                  class="px-8 py-4 bg-gradient-to-r from-neon-blue to-neon-purple hover:from-neon-purple hover:to-neon-pink disabled:from-gray-600 disabled:to-gray-700 text-white font-bold rounded-2xl shadow-lg transition-all duration-300 transform hover:scale-105 disabled:scale-100 disabled:opacity-50 border border-neon-blue/30 font-mono">
+                  class="px-8 py-4 bg-gradient-to-r from-neon-blue to-neon-purple hover:from-neon-purple hover:to-neon-pink disabled:from-gray-600 disabled:to-gray-700 text-white font-bold rounded-2xl shadow-lg transition-all duration-300 transform hover:scale-105 disabled:scale-100 disabled:opacity-50 border-neon-blue/30 font-mono">
             {#if isLoading}
               [SENDING...]
             {:else}
