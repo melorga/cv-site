@@ -1,4 +1,4 @@
-# MARIANO.AI 🚀
+# Persona CV assistant 🚀
 
 > A next-generation interactive CV platform combining modern web technologies with AI-powered conversation capabilities.
 
