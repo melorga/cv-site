@@ -158,6 +158,12 @@ export const handle: Handle = async ({ event, resolve }) => {
 	response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
 	// Updated Permissions-Policy for July 2025 standards - focus on current features only
 	response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=(), usb=()');
+	
+	// HSTS - Force HTTPS connections for enhanced security
+	// Only apply in production to avoid local development issues
+	if (event.url.hostname !== 'localhost' && event.url.protocol === 'https:') {
+		response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+	}
 
 	// CSP - Secure configuration that maintains functionality
 	const csp = [
