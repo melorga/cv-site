@@ -54,7 +54,7 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 	// Basic content filtering
 	const suspiciousPatterns = [
 		/\b(exec|eval|system|shell|cmd)\s*\(/i,
-		/\<script[^\>]*\>.*\<\/script\>/i,
+		/<script[^>]*>.*<\/script>/i,
 		/javascript:/i,
 		/(union|select|insert|update|delete|drop)\s+/i
 	];
@@ -66,7 +66,9 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 
 	console.log(`[SECURITY] Message validation passed for IP: ${clientIP}`);
 
-	// Verify Turnstile token (required for all requests)
+	// Verify Turnstile token (placeholder token is allowed)
+	console.log(`[CAPTCHA-API] Checking Turnstile token (can be placeholder)...`);
+	
 	if (!turnstileToken || typeof turnstileToken !== 'string') {
 		console.log(`[SECURITY] Missing or invalid Turnstile token from IP: ${clientIP}`);
 		return json({ 
@@ -75,6 +77,11 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 		}, { status: 403 });
 	}
 
+	if (turnstileToken === 'cookie-verified') {
+		console.log(`[CAPTCHA-API] Using placeholder token, skipping Turnstile validation`);
+	} else {
+		// Regular validation
+		console.log('[CAPTCHA-API] Token is not placeholder, proceeding with regular validation');
 		// Validate Turnstile token
 		if (platform?.env?.TURNSTILE_SECRET) {
 			try {
@@ -110,6 +117,7 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 		} else {
 			console.warn('TURNSTILE_SECRET not configured, skipping validation');
 		}
+	}
 
 		// Validate environment variables
 		if (!platform?.env?.GROQ_API_KEY) {

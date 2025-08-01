@@ -7,7 +7,7 @@
 import { spawn } from 'child_process';
 import fetch from 'node-fetch';
 
-const PREVIEW_URL = 'http://localhost:4173';
+const PREVIEW_URL = 'http://localhost:5173';
 const MAX_WAIT_TIME = 30000; // 30 seconds
 const CHECK_INTERVAL = 1000; // 1 second
 

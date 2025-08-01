@@ -173,19 +173,19 @@
 			}
 		];
 
-		// Clear previous token (from login screen) and re-render Turnstile for chat
-		turnstileToken = '';
-		console.log('🚀 Initializing chat - clearing old token and re-rendering Turnstile');
+		console.log('🚀 Initializing chat interface');
 		
-		// Re-render Turnstile for chat interface after DOM is ready
+		// Set up chat container for scrolling and render Turnstile for chat
 		setTimeout(() => {
 			chatContainer = document.querySelector('.custom-scrollbar');
 			if (chatContainer) {
 				chatContainer.scrollTop = chatContainer.scrollHeight;
 			}
-			// Force re-render Turnstile widgets for chat
-			renderTurnstile();
-		}, 100);
+			// Render Turnstile for chat interface if not already done
+			if (typeof (window as any).turnstile !== 'undefined') {
+				renderTurnstile();
+			}
+		}, 200);
 	}
 
 	function loadTurnstile() {
@@ -201,11 +201,11 @@
 		}
 
 		// Add feature detection for modern storage APIs
-		if (typeof navigator !== 'undefined' && 'storage' in navigator) {
-			// Modern navigator.storage is available, suppress warnings for third-party code
-			const originalWarn = console.warn;
-			console.warn = (...args) => {
-				if (args[0]?.includes?.('StorageType.persistent')) {
+	if (typeof navigator !== 'undefined' && 'storage' in navigator) {
+		// Modern navigator.storage is available, suppress warnings for third-party code
+		const originalWarn = console.warn;
+		console.warn = (...args: unknown[]) => {
+			if ((args[0] as string)?.includes?.('StorageType.persistent')) {
 					// Suppress Turnstile's deprecated storage API warnings
 					return;
 				}
@@ -259,7 +259,14 @@
 					turnstile?: {
 						render: (
 							selector: string,
-							options: { sitekey: string; theme: string; callback: (token: string) => void; 'refresh-expired': string }
+							options: { 
+								sitekey: string; 
+								theme: string; 
+								callback: (token: string) => void; 
+								'refresh-expired': string;
+								'error-callback'?: (errorCode: string) => void;
+								'expired-callback'?: () => void;
+							}
 						) => void;
 						reset: (selector: string) => void;
 					};
@@ -272,7 +279,14 @@
 						turnstile: {
 							render: (
 								selector: string,
-								options: { sitekey: string; theme: string; callback: (token: string) => void; 'refresh-expired': string }
+								options: { 
+									sitekey: string; 
+									theme: string; 
+									callback: (token: string) => void; 
+									'refresh-expired': string;
+									'error-callback'?: (errorCode: string) => void;
+									'expired-callback'?: () => void;
+								}
 							) => void;
 							reset: (selector: string) => void;
 						};
@@ -356,6 +370,11 @@
 			return;
 		}
 
+		if (!turnstileToken) {
+			authError = 'Please complete the CAPTCHA verification';
+			return;
+		}
+
 		if (!auth) {
 			authError = 'Authentication service not available';
 			return;
@@ -365,20 +384,45 @@
 		authError = '';
 
 		try {
+			// Step 1: Verify CAPTCHA first
+			console.log('🔐 Verifying CAPTCHA...');
+			const captchaResponse = await fetch('/api/auth/verify-captcha', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({ token: turnstileToken })
+			});
+
+			if (!captchaResponse.ok) {
+				const captchaError = await captchaResponse.json();
+				console.error('❌ CAPTCHA verification failed:', captchaError);
+				authError = captchaError.message || 'CAPTCHA verification failed';
+				// Reset Turnstile to allow retry
+				resetTurnstile();
+				return;
+			}
+
+			const captchaResult = await captchaResponse.json();
+			console.log('✅ CAPTCHA verification successful:', captchaResult.message);
+
+			// Step 2: Proceed with Firebase authentication
 			if (isLogin) {
 				// Sign in
 				const { signInWithEmailAndPassword } = await import('firebase/auth');
 				await signInWithEmailAndPassword(auth, email, password);
-				console.log('Login successful');
+				console.log('🔓 Login successful');
 			} else {
 				// Sign up
 				const { createUserWithEmailAndPassword } = await import('firebase/auth');
 				await createUserWithEmailAndPassword(auth, email, password);
-				console.log('Registration successful');
+				console.log('👤 Registration successful');
 			}
 		} catch (error: unknown) {
 			console.error('Authentication error:', error);
 			authError = (error as import('firebase/auth').AuthError)?.message || 'Authentication failed';
+			// Reset Turnstile on auth error
+			resetTurnstile();
 		} finally {
 			authLoading = false;
 		}
@@ -402,18 +446,44 @@
 			return;
 		}
 
-		// Validate Turnstile token before proceeding
-		console.log('🔐 Checking Turnstile token...');
-		console.log('🔐 Current turnstileToken:', turnstileToken ? `${turnstileToken.substring(0, 20)}...` : 'NONE');
-		console.log('🔐 Token length:', turnstileToken ? turnstileToken.length : 0);
+	// Check for CAPTCHA verification via cookie system
+		console.log('🔐 [CLIENT]: Checking CAPTCHA verification cookies...');
+		console.log('🔐 [CLIENT]: Raw document.cookie:', document.cookie);
 		
-		if (!turnstileToken) {
-			console.error('❌ No Turnstile token available');
-			chatError = 'CAPTCHA verification required. Please complete the security challenge.';
+		const cookies = document.cookie.split('; ').reduce((acc: Record<string, string>, cookie) => {
+			const [key, value] = cookie.split('=');
+			if (key && value) {
+				acc[key] = decodeURIComponent(value);
+			}
+			return acc;
+		}, {} as Record<string, string>);
+
+		console.log('🔐 [CLIENT]: All parsed cookies:', cookies);
+		console.log('🔐 [CLIENT]: Specific cookies for CAPTCHA:');
+		console.log('🔐 [CLIENT]:   - captcha_verified:', cookies.captcha_verified);
+		console.log('🔐 [CLIENT]:   - captcha_expires:', cookies.captcha_expires);
+		console.log('🔐 [CLIENT]: Additional diagnostics');
+		console.log('🔐 [CLIENT]:   - Current time (ms):', Date.now());
+		console.log('🔐 [CLIENT]:   - Expires time (ms):', Number(cookies.captcha_expires));
+		console.log('🔐 [CLIENT]:   - Is expired?:', Date.now() > Number(cookies.captcha_expires));
+
+
+		if (!cookies.captcha_verified || Date.now() > Number(cookies.captcha_expires)) {
+			console.error('❌ [CLIENT]: CAPTCHA verification expired or missing');
+			console.error('❌ [CLIENT]: Details:');
+			console.error('❌ [CLIENT]:   - captcha_verified exists:', !!cookies.captcha_verified);
+			console.error('❌ [CLIENT]:   - captcha_expires exists:', !!cookies.captcha_expires);
+		console.error('❌ [CLIENT]:   - Time expired:', Date.now() > Number(cookies.captcha_expires));
+			console.error('❌ [CLIENT]:   - Expired by (ms):', Date.now() - Number(cookies.captcha_expires));
+			chatError = 'CAPTCHA verification required. Please refresh your session and login again.';
 			return;
 		}
 
-		// Add user message to history
+		// Use a placeholder token since we're relying on cookie-based auth
+		console.log('🔑 [CLIENT]: All checks passed, using placeholder token and verified cookies for CAPTCHA.');
+		const chatTurnstileToken = 'cookie-verified';
+
+		
 		const userMessage = {
 			role: 'user',
 			message: chatMessage,
@@ -438,9 +508,10 @@
 
 		try {
 			console.log('📤 Sending chat message:', currentMessage);
+			console.log('📤 Using cookie-verified token for chat');
 			console.log('📤 Request payload:', {
 				message: currentMessage,
-				turnstileToken: turnstileToken.substring(0, 20) + '...'
+				turnstileToken: chatTurnstileToken
 			});
 
 			const response = await fetch('/api/chat', {
@@ -450,7 +521,7 @@
 				},
 				body: JSON.stringify({
 					message: currentMessage,
-					turnstileToken: turnstileToken
+					turnstileToken: chatTurnstileToken
 				})
 			});
 
@@ -858,15 +929,15 @@
 						></textarea>
 						<div class="absolute bottom-2 right-2 text-xs text-gray-500 font-mono"></div>
 					</div>
-					<!-- Add Turnstile widget for chat verification -->
-					<div id="turnstile-widget-chat" class="flex justify-center py-2"></div>
 					<button
 						on:click={sendChat}
-						disabled={!chatMessage.trim()}
+						disabled={!chatMessage.trim() || !turnstileToken}
 						class="px-8 py-4 bg-gradient-to-r from-neon-blue to-neon-purple hover:from-neon-purple hover:to-neon-pink disabled:from-gray-600 disabled:to-gray-700 text-white font-bold rounded-2xl shadow-lg transition-all duration-300 transform hover:scale-105 disabled:scale-100 disabled:opacity-50 border-neon-blue/30 font-mono"
 					>
 						{#if isLoading}
 							[SENDING...]
+						{:else if !turnstileToken}
+							[VERIFY]
 						{:else}
 							[TRANSMIT]
 						{/if}

@@ -7,7 +7,7 @@
 
 import fetch from 'node-fetch';
 
-const BASE_URL = process.env.TEST_URL || 'http://localhost:4173';
+const BASE_URL = process.env.TEST_URL || 'http://localhost:5173';
 const TIMEOUT = 10000;
 
 class SecurityTester {

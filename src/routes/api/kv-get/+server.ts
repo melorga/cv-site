@@ -1,6 +1,6 @@
 import { json } from '@sveltejs/kit';
 
-export async function POST({ request, platform }) {
+export async function POST({ request, platform }: { request: Request; platform: any }) {
 	if (!platform?.env?.PROFILE_VECTORS) {
 		return json({ error: 'KV binding not available' }, { status: 500 });
 	}
