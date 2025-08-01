@@ -35,36 +35,10 @@ export async function initFirebase() {
 				throw new Error('Invalid Firebase configuration format');
 			}
 		} else {
-			// Development mode - allow fallback for demo purposes
-			console.log('⚠️  No Firebase config found, running in development mode');
-
-			// Check if we have individual environment variables
-			const apiKey = import.meta.env.VITE_FIREBASE_API_KEY;
-			const authDomain = import.meta.env.VITE_FIREBASE_AUTH_DOMAIN;
-			const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID;
-
-			if (apiKey && authDomain && projectId) {
-				config = {
-					apiKey,
-					authDomain,
-					projectId,
-					storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || `${projectId}.appspot.com`,
-					messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '123456789',
-					appId: import.meta.env.VITE_FIREBASE_APP_ID || 'demo-app-id'
-				};
-				console.log('🔥 Firebase config assembled from individual env vars');
-			} else {
-				// Throw error for production, but allow development mode
-				if (import.meta.env.PROD) {
-					throw new Error(
-						'Firebase configuration not found. Please set VITE_FIREBASE_CONFIG or individual Firebase environment variables.'
-					);
-				} else {
-					// Development fallback - will fail authentication but allow UI testing
-					console.log('🚧 Running in demo mode - authentication will not work');
-					throw new Error('DEV_MODE_NO_FIREBASE');
-				}
-			}
+			// Always require proper Firebase configuration
+			throw new Error(
+				'Firebase configuration not found. Please set VITE_FIREBASE_CONFIG environment variable.'
+			);
 		}
 
 		// Validate required config fields
@@ -78,15 +52,6 @@ export async function initFirebase() {
 		app = initializeApp(config);
 		auth = getAuth(app);
 
-		// Connect to Auth emulator in development if specified
-		if (import.meta.env.DEV && import.meta.env.VITE_FIREBASE_AUTH_EMULATOR_HOST) {
-			try {
-				connectAuthEmulator(auth, `http://${import.meta.env.VITE_FIREBASE_AUTH_EMULATOR_HOST}`);
-				console.log('🔗 Connected to Firebase Auth emulator');
-			} catch (emulatorError) {
-				console.warn('⚠️  Failed to connect to Auth emulator:', emulatorError);
-			}
-		}
 
 		isInitialized = true;
 		console.log('✅ Firebase initialized successfully');

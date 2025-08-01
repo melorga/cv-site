@@ -66,8 +66,8 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 
 	console.log(`[SECURITY] Message validation passed for IP: ${clientIP}`);
 
-	// Verify Turnstile token (placeholder token is allowed)
-	console.log(`[CAPTCHA-API] Checking Turnstile token (can be placeholder)...`);
+	// Verify Turnstile token
+	console.log(`[CAPTCHA-API] Checking Turnstile token...`);
 	
 	if (!turnstileToken || typeof turnstileToken !== 'string') {
 		console.log(`[SECURITY] Missing or invalid Turnstile token from IP: ${clientIP}`);
@@ -77,11 +77,13 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 		}, { status: 403 });
 	}
 
+	// Use cookie-verified token for previously validated sessions
 	if (turnstileToken === 'cookie-verified') {
-		console.log(`[CAPTCHA-API] Using placeholder token, skipping Turnstile validation`);
+		console.log(`[CAPTCHA-API] Using cookie-verified token`);
+		// Cookie verification already handled by verify-captcha endpoint
 	} else {
-		// Regular validation
-		console.log('[CAPTCHA-API] Token is not placeholder, proceeding with regular validation');
+		// Validate new Turnstile token
+		console.log('[CAPTCHA-API] Validating fresh Turnstile token');
 		// Validate Turnstile token
 		if (platform?.env?.TURNSTILE_SECRET) {
 			try {

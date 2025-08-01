@@ -407,17 +407,17 @@
 			console.log('✅ CAPTCHA verification successful:', captchaResult.message);
 
 			// Step 2: Proceed with Firebase authentication
-			if (isLogin) {
-				// Sign in
-				const { signInWithEmailAndPassword } = await import('firebase/auth');
-				await signInWithEmailAndPassword(auth, email, password);
-				console.log('🔓 Login successful');
-			} else {
-				// Sign up
-				const { createUserWithEmailAndPassword } = await import('firebase/auth');
-				await createUserWithEmailAndPassword(auth, email, password);
-				console.log('👤 Registration successful');
-			}
+if (!auth) throw new Error('Authentication service not available');
+
+                if (isLogin) {
+                    const { signInWithEmailAndPassword } = await import('firebase/auth');
+                    await signInWithEmailAndPassword(auth, email, password);
+                    console.log('🔓 Login successful');
+                } else {
+                    const { createUserWithEmailAndPassword } = await import('firebase/auth');
+                    await createUserWithEmailAndPassword(auth, email, password);
+                    console.log('👤 Registration successful');
+                }
 		} catch (error: unknown) {
 			console.error('Authentication error:', error);
 			authError = (error as import('firebase/auth').AuthError)?.message || 'Authentication failed';
