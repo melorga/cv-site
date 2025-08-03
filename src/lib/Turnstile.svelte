@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	const sitekey = import.meta.env.VITE_TURNSTILE_SITEKEY;
+	console.log('🔑 Turnstile script initializing');
 	onMount(() => {
 		const s = document.createElement('script');
 		s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';

@@ -104,9 +104,15 @@ class SecurityTester {
 				} else if (csp.includes("'unsafe-eval'")) {
 					// Check if unsafe-eval is being used legitimately for Turnstile
 					if (csp.includes('https://challenges.cloudflare.com')) {
-						this.log('PASS', 'CSP allows unsafe-eval for Cloudflare Turnstile (required for CAPTCHA functionality)');
+						this.log(
+							'PASS',
+							'CSP allows unsafe-eval for Cloudflare Turnstile (required for CAPTCHA functionality)'
+						);
 					} else {
-						this.log('WARN', 'CSP allows unsafe-eval without apparent justification (potentially dangerous)');
+						this.log(
+							'WARN',
+							'CSP allows unsafe-eval without apparent justification (potentially dangerous)'
+						);
 					}
 				} else {
 					let securityLevel = 'PASS';

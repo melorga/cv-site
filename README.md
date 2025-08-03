@@ -13,6 +13,7 @@
 ## ✨ Features
 
 ### 🎨 **Modern UI/UX**
+
 - **Responsive Design**: Optimized for all devices with mobile-first approach
 - **Dark/Light Mode**: Automatic theme switching with user preference persistence
 - **High Contrast Mode**: Enhanced accessibility for visually impaired users
@@ -20,12 +21,14 @@
 - **Matrix-Style Effects**: Cyberpunk-inspired visual elements with neural network animations
 
 ### 🤖 **AI-Powered Chat**
+
 - **Contextual Conversations**: AI assistant trained on professional background and experience
 - **Real-time Responses**: Powered by Groq's lightning-fast inference engine
 - **Rate Limiting**: Intelligent request throttling for optimal performance
 - **Message History**: Persistent conversation tracking with timestamps
 
 ### 🔐 **Enterprise-Grade Security**
+
 - **Content Security Policy (CSP)**: Comprehensive protection against XSS attacks
 - **CAPTCHA Integration**: Cloudflare Turnstile for bot protection
 - **Rate Limiting**: Advanced request throttling using Redis-compatible storage
@@ -33,6 +36,7 @@
 - **HTTPS Enforcement**: Automatic secure connection redirection
 
 ### ♿ **Accessibility First**
+
 - **WCAG Compliance**: Full accessibility standards implementation
 - **Screen Reader Support**: Semantic HTML with proper ARIA labels
 - **Keyboard Navigation**: Complete interface accessibility via keyboard
@@ -42,6 +46,7 @@
 ## 🏗️ Architecture
 
 ### **Frontend Stack**
+
 ```
 ┌─ SvelteKit (Framework)
 ├─ TypeScript (Type Safety)
@@ -51,6 +56,7 @@
 ```
 
 ### **Backend Services**
+
 ```
 ┌─ Cloudflare Pages (Hosting)
 ├─ Cloudflare Workers (Edge Computing)
@@ -60,6 +66,7 @@
 ```
 
 ### **Security & Performance**
+
 ```
 ┌─ Cloudflare Turnstile (CAPTCHA)
 ├─ Rate Limiting (Request Throttling)
@@ -71,12 +78,14 @@
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 - **Node.js** 18+ and **pnpm** 8+
 - **Firebase** project with Authentication enabled
 - **Groq API** key for AI functionality
 - **Cloudflare** account for deployment
 
 ### 1. Environment Setup
+
 ```bash
 # Clone the repository
 git clone <repository-url>
@@ -90,6 +99,7 @@ cp .env.example .env.local
 ```
 
 ### 2. Configure Environment Variables
+
 ```bash
 # .env.local
 VITE_FIREBASE_API_KEY=your_firebase_api_key
@@ -101,6 +111,7 @@ TURNSTILE_SECRET_KEY=your_turnstile_secret_key
 ```
 
 ### 3. Firebase Configuration
+
 ```bash
 # Install Firebase CLI
 npm install -g firebase-tools
@@ -113,6 +124,7 @@ firebase init auth
 ```
 
 ### 4. Development Server
+
 ```bash
 # Start development server
 pnpm dev
@@ -122,6 +134,7 @@ pnpm pages:dev
 ```
 
 ### 5. Build & Deploy
+
 ```bash
 # Production build
 pnpm build
@@ -136,6 +149,7 @@ pnpm deploy:check
 ## 🛠️ Development Workflow
 
 ### **Code Quality**
+
 ```bash
 # Type checking
 pnpm check
@@ -152,6 +166,7 @@ pnpm validate
 ```
 
 ### **Project Structure**
+
 ```
 src/
 ├── routes/
@@ -170,53 +185,60 @@ src/
 ## 🔧 Advanced Configuration
 
 ### **Content Security Policy**
+
 The application implements a strict CSP with nonce-based script execution:
+
 ```typescript
 const csp = [
-  "default-src 'self'",
-  `script-src 'self' https://challenges.cloudflare.com 'wasm-unsafe-eval' 'unsafe-eval' 'nonce-${nonce}'`,
-  "style-src 'self' 'unsafe-inline'",
-  "connect-src 'self' https://api.groq.com https://challenges.cloudflare.com",
-  // ... additional directives
+	"default-src 'self'",
+	`script-src 'self' https://challenges.cloudflare.com 'wasm-unsafe-eval' 'unsafe-eval' 'nonce-${nonce}'`,
+	"style-src 'self' 'unsafe-inline'",
+	"connect-src 'self' https://api.groq.com https://challenges.cloudflare.com"
+	// ... additional directives
 ].join('; ');
 ```
 
 ### **Rate Limiting Strategy**
+
 ```typescript
-const limiter = new RateLimiterMemory({ 
-  points: 30,    // Number of requests
-  duration: 60   // Per 60 seconds
+const limiter = new RateLimiterMemory({
+	points: 30, // Number of requests
+	duration: 60 // Per 60 seconds
 });
 ```
 
 ### **AI Chat Configuration**
+
 The chat system supports multiple AI providers with fallback mechanisms:
+
 ```typescript
 // Groq API integration with error handling
 const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-  method: 'POST',
-  headers: {
-    'Authorization': `Bearer ${GROQ_API_KEY}`,
-    'Content-Type': 'application/json'
-  },
-  body: JSON.stringify({
-    model: 'llama3-8b-8192',
-    messages: conversationHistory,
-    max_tokens: 1000,
-    temperature: 0.7
-  })
+	method: 'POST',
+	headers: {
+		Authorization: `Bearer ${GROQ_API_KEY}`,
+		'Content-Type': 'application/json'
+	},
+	body: JSON.stringify({
+		model: 'llama3-8b-8192',
+		messages: conversationHistory,
+		max_tokens: 1000,
+		temperature: 0.7
+	})
 });
 ```
 
 ## 📊 Performance Optimizations
 
 ### **Bundle Analysis**
+
 - **Vite Rollup**: Code splitting and tree shaking
 - **Dynamic Imports**: Lazy loading of Firebase authentication
 - **Edge-Side Rendering**: Cloudflare Workers for SSR
 - **Asset Optimization**: Automatic image compression and resizing
 
 ### **Caching Strategy**
+
 - **Static Assets**: 1 year cache with version hashing
 - **API Responses**: Smart caching with invalidation
 - **Edge Caching**: Global CDN distribution
@@ -225,6 +247,7 @@ const response = await fetch('https://api.groq.com/openai/v1/chat/completions', 
 ## 🧪 Testing & Quality Assurance
 
 ### **Automated Testing**
+
 ```bash
 # Security vulnerability scanning
 pnpm test:security
@@ -237,6 +260,7 @@ pnpm check
 ```
 
 ### **Performance Monitoring**
+
 - **Core Web Vitals**: LCP, FID, CLS tracking
 - **Error Tracking**: Real-time error monitoring
 - **Analytics**: User interaction and conversion tracking
@@ -245,6 +269,7 @@ pnpm check
 ## 🚦 Deployment Pipeline
 
 ### **Cloudflare Pages Setup**
+
 1. **Connect Repository**: Link your Git repository to Cloudflare Pages
 2. **Build Configuration**:
    ```yaml
@@ -256,25 +281,28 @@ pnpm check
 4. **Custom Domain**: Set up custom domain with SSL certificate
 
 ### **Environment-Specific Configurations**
+
 ```typescript
 // Production optimizations
 const isProduction = process.env.NODE_ENV === 'production';
 const optimizations = {
-  minify: isProduction,
-  sourcemap: !isProduction,
-  treeshake: isProduction
+	minify: isProduction,
+	sourcemap: !isProduction,
+	treeshake: isProduction
 };
 ```
 
 ## 🔒 Security Considerations
 
 ### **Authentication Flow**
+
 - Email/password authentication via Firebase
 - Secure session management with automatic token refresh
 - Protected routes with authentication middleware
 - CAPTCHA verification for sensitive operations
 
 ### **Data Protection**
+
 - All API communications over HTTPS
 - Input sanitization and validation
 - SQL injection prevention (parameterized queries)
@@ -283,12 +311,14 @@ const optimizations = {
 ## 📈 Performance Metrics
 
 ### **Lighthouse Scores**
+
 - **Performance**: 95+
 - **Accessibility**: 100
 - **Best Practices**: 100
 - **SEO**: 95+
 
 ### **Key Performance Indicators**
+
 - **First Contentful Paint**: < 1.5s
 - **Largest Contentful Paint**: < 2.5s
 - **Cumulative Layout Shift**: < 0.1
@@ -297,12 +327,14 @@ const optimizations = {
 ## 🤝 Contributing
 
 ### **Development Standards**
+
 - **TypeScript**: Strict type checking enabled
 - **ESLint**: Airbnb configuration with custom rules
 - **Prettier**: Consistent code formatting
 - **Conventional Commits**: Semantic commit messages
 
 ### **Pull Request Process**
+
 1. Fork the repository
 2. Create a feature branch
 3. Run the full test suite

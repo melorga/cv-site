@@ -174,7 +174,7 @@
 		];
 
 		console.log('🚀 Initializing chat interface');
-		
+
 		// Set up chat container for scrolling and render Turnstile for chat
 		setTimeout(() => {
 			chatContainer = document.querySelector('.custom-scrollbar');
@@ -182,7 +182,7 @@
 				chatContainer.scrollTop = chatContainer.scrollHeight;
 			}
 			// Render Turnstile for chat interface if not already done
-			if (typeof (window as any).turnstile !== 'undefined') {
+			if (typeof (window as { turnstile?: unknown }).turnstile !== 'undefined') {
 				renderTurnstile();
 			}
 		}, 200);
@@ -191,9 +191,9 @@
 	function loadTurnstile() {
 		// Debug: Check sitekey availability
 		const sitekey = import.meta.env.VITE_TURNSTILE_SITEKEY;
-		console.log('🔑 TURNSTILE SITEKEY:', sitekey ? `${sitekey.substring(0, 10)}...` : 'MISSING');
-		console.log('🔑 All VITE env vars:', Object.keys(import.meta.env).filter(k => k.startsWith('VITE_')));
-		
+		console.log('🔑 TURNSTILE SITEKEY received');
+		console.log('🔑 Environment variables loaded');
+
 		if (!sitekey || sitekey === 'undefined') {
 			console.error('❌ VITE_TURNSTILE_SITEKEY is missing or undefined!');
 			console.error('❌ Make sure to set VITE_TURNSTILE_SITEKEY in your .env.local file');
@@ -201,11 +201,11 @@
 		}
 
 		// Add feature detection for modern storage APIs
-	if (typeof navigator !== 'undefined' && 'storage' in navigator) {
-		// Modern navigator.storage is available, suppress warnings for third-party code
-		const originalWarn = console.warn;
-		console.warn = (...args: unknown[]) => {
-			if ((args[0] as string)?.includes?.('StorageType.persistent')) {
+		if (typeof navigator !== 'undefined' && 'storage' in navigator) {
+			// Modern navigator.storage is available, suppress warnings for third-party code
+			const originalWarn = console.warn;
+			console.warn = (...args: unknown[]) => {
+				if ((args[0] as string)?.includes?.('StorageType.persistent')) {
 					// Suppress Turnstile's deprecated storage API warnings
 					return;
 				}
@@ -243,11 +243,14 @@
 
 	function renderTurnstile() {
 		console.log('🎨 renderTurnstile called');
-		console.log('🎨 Window turnstile available:', typeof (window as any).turnstile);
-		
+		console.log(
+			'🎨 Window turnstile available:',
+			typeof (window as { turnstile?: unknown }).turnstile
+		);
+
 		const sitekey = import.meta.env.VITE_TURNSTILE_SITEKEY;
-		console.log('🎨 Sitekey for render:', sitekey ? `${sitekey.substring(0, 10)}...` : 'MISSING');
-		
+		console.log('🎨 Sitekey available for render');
+
 		if (!sitekey) {
 			console.error('❌ Cannot render Turnstile without sitekey');
 			return;
@@ -259,10 +262,10 @@
 					turnstile?: {
 						render: (
 							selector: string,
-							options: { 
-								sitekey: string; 
-								theme: string; 
-								callback: (token: string) => void; 
+							options: {
+								sitekey: string;
+								theme: string;
+								callback: (token: string) => void;
 								'refresh-expired': string;
 								'error-callback'?: (errorCode: string) => void;
 								'expired-callback'?: () => void;
@@ -279,10 +282,10 @@
 						turnstile: {
 							render: (
 								selector: string,
-								options: { 
-									sitekey: string; 
-									theme: string; 
-									callback: (token: string) => void; 
+								options: {
+									sitekey: string;
+									theme: string;
+									callback: (token: string) => void;
 									'refresh-expired': string;
 									'error-callback'?: (errorCode: string) => void;
 									'expired-callback'?: () => void;
@@ -291,7 +294,7 @@
 							reset: (selector: string) => void;
 						};
 					}
-			).turnstile;
+				).turnstile;
 
 				// Render for authentication form
 				if (document.getElementById('turnstile-widget')) {
@@ -301,7 +304,7 @@
 						'refresh-expired': 'auto',
 						callback: (token: string) => {
 							turnstileToken = token;
-							console.log('✅ Turnstile token received (auth)');
+							console.log('✅ Turnstile token received for auth');
 						},
 						'error-callback': (errorCode: string) => {
 							console.error('❌ Turnstile error (auth):', errorCode);
@@ -329,7 +332,7 @@
 						'refresh-expired': 'auto',
 						callback: (token: string) => {
 							turnstileToken = token;
-							console.log('✅ Turnstile token received (chat):', token.substring(0, 20) + '...');
+							console.log('✅ Turnstile token received for chat');
 						},
 						'error-callback': (errorCode: string) => {
 							console.error('❌ Turnstile error (chat):', errorCode);
@@ -407,17 +410,17 @@
 			console.log('✅ CAPTCHA verification successful:', captchaResult.message);
 
 			// Step 2: Proceed with Firebase authentication
-if (!auth) throw new Error('Authentication service not available');
+			if (!auth) throw new Error('Authentication service not available');
 
-                if (isLogin) {
-                    const { signInWithEmailAndPassword } = await import('firebase/auth');
-                    await signInWithEmailAndPassword(auth, email, password);
-                    console.log('🔓 Login successful');
-                } else {
-                    const { createUserWithEmailAndPassword } = await import('firebase/auth');
-                    await createUserWithEmailAndPassword(auth, email, password);
-                    console.log('👤 Registration successful');
-                }
+			if (isLogin) {
+				const { signInWithEmailAndPassword } = await import('firebase/auth');
+				await signInWithEmailAndPassword(auth, email, password);
+				console.log('🔓 Login successful');
+			} else {
+				const { createUserWithEmailAndPassword } = await import('firebase/auth');
+				await createUserWithEmailAndPassword(auth, email, password);
+				console.log('👤 Registration successful');
+			}
 		} catch (error: unknown) {
 			console.error('Authentication error:', error);
 			authError = (error as import('firebase/auth').AuthError)?.message || 'Authentication failed';
@@ -434,7 +437,44 @@ if (!auth) throw new Error('Authentication service not available');
 			const { signOut } = await import('firebase/auth');
 			await signOut(auth);
 			chatHistory = [];
-			console.log('Logout successful');
+
+			// Clear CAPTCHA token and reset session state on logout
+			console.log('🔄 Resetting CAPTCHA session state on logout...');
+			turnstileToken = '';
+
+			// Clear any existing CAPTCHA verification cookies to reset session
+			document.cookie =
+				'captcha_verified=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=Strict';
+			document.cookie =
+				'captcha_expires=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=Strict';
+
+			// Reset authentication Turnstile widget for next user
+			if (
+				typeof (window as { turnstile?: { reset: (selector: string) => void } }).turnstile !==
+				'undefined'
+			) {
+				try {
+					const turnstileAPI = (
+						window as unknown as { turnstile: { reset: (selector: string) => void } }
+					).turnstile;
+
+					// Reset auth widget to allow next user to login
+					if (document.getElementById('turnstile-widget')) {
+						turnstileAPI.reset('#turnstile-widget');
+						console.log('✅ Auth Turnstile widget reset on logout');
+					}
+				} catch (e) {
+					console.error('❌ Error resetting Turnstile on logout:', e);
+				}
+			}
+
+			// Re-render Turnstile widgets after a short delay to ensure they're ready for next login
+			setTimeout(() => {
+				console.log('🎨 Re-rendering Turnstile widgets after logout...');
+				renderTurnstile();
+			}, 500);
+
+			console.log('🔓 Logout successful - CAPTCHA state reset');
 		} catch (error) {
 			console.error('Logout error:', error);
 		}
@@ -446,44 +486,10 @@ if (!auth) throw new Error('Authentication service not available');
 			return;
 		}
 
-	// Check for CAPTCHA verification via cookie system
-		console.log('🔐 [CLIENT]: Checking CAPTCHA verification cookies...');
-		console.log('🔐 [CLIENT]: Raw document.cookie:', document.cookie);
-		
-		const cookies = document.cookie.split('; ').reduce((acc: Record<string, string>, cookie) => {
-			const [key, value] = cookie.split('=');
-			if (key && value) {
-				acc[key] = decodeURIComponent(value);
-			}
-			return acc;
-		}, {} as Record<string, string>);
+		// Chat uses session-based authentication - no CAPTCHA required here
+		console.log('🔐 [CLIENT]: Using session-based authentication for chat');
+		const chatTurnstileToken = 'session-verified'; // Use session-based verification
 
-		console.log('🔐 [CLIENT]: All parsed cookies:', cookies);
-		console.log('🔐 [CLIENT]: Specific cookies for CAPTCHA:');
-		console.log('🔐 [CLIENT]:   - captcha_verified:', cookies.captcha_verified);
-		console.log('🔐 [CLIENT]:   - captcha_expires:', cookies.captcha_expires);
-		console.log('🔐 [CLIENT]: Additional diagnostics');
-		console.log('🔐 [CLIENT]:   - Current time (ms):', Date.now());
-		console.log('🔐 [CLIENT]:   - Expires time (ms):', Number(cookies.captcha_expires));
-		console.log('🔐 [CLIENT]:   - Is expired?:', Date.now() > Number(cookies.captcha_expires));
-
-
-		if (!cookies.captcha_verified || Date.now() > Number(cookies.captcha_expires)) {
-			console.error('❌ [CLIENT]: CAPTCHA verification expired or missing');
-			console.error('❌ [CLIENT]: Details:');
-			console.error('❌ [CLIENT]:   - captcha_verified exists:', !!cookies.captcha_verified);
-			console.error('❌ [CLIENT]:   - captcha_expires exists:', !!cookies.captcha_expires);
-		console.error('❌ [CLIENT]:   - Time expired:', Date.now() > Number(cookies.captcha_expires));
-			console.error('❌ [CLIENT]:   - Expired by (ms):', Date.now() - Number(cookies.captcha_expires));
-			chatError = 'CAPTCHA verification required. Please refresh your session and login again.';
-			return;
-		}
-
-		// Use a placeholder token since we're relying on cookie-based auth
-		console.log('🔑 [CLIENT]: All checks passed, using placeholder token and verified cookies for CAPTCHA.');
-		const chatTurnstileToken = 'cookie-verified';
-
-		
 		const userMessage = {
 			role: 'user',
 			message: chatMessage,
@@ -508,11 +514,7 @@ if (!auth) throw new Error('Authentication service not available');
 
 		try {
 			console.log('📤 Sending chat message:', currentMessage);
-			console.log('📤 Using cookie-verified token for chat');
-			console.log('📤 Request payload:', {
-				message: currentMessage,
-				turnstileToken: chatTurnstileToken
-			});
+			console.log('📤 Using session-based verification for chat');
 
 			const response = await fetch('/api/chat', {
 				method: 'POST',
@@ -531,28 +533,28 @@ if (!auth) throw new Error('Authentication service not available');
 			if (response.ok) {
 				const data = await response.json();
 				console.log('✅ Chat API response data:', data);
-			chatHistory = [
-				...chatHistory,
-				{
-					role: 'assistant',
-					message: data.response,
-					timestamp: new Date()
-				}
-			];
+				chatHistory = [
+					...chatHistory,
+					{
+						role: 'assistant',
+						message: data.response,
+						timestamp: new Date()
+					}
+				];
 
-			// Reset Turnstile after successful message
-			console.log('🔄 Resetting Turnstile after successful chat');
-			resetTurnstile();
+				// Reset Turnstile after successful message
+				console.log('🔄 Resetting Turnstile after successful chat');
+				resetTurnstile();
 
-			// Scroll to the latest message after AI responds
-			setTimeout(() => {
-				if (!chatContainer) {
-					chatContainer = document.querySelector('.custom-scrollbar');
-				}
-				if (chatContainer) {
-					chatContainer.scrollTop = chatContainer.scrollHeight;
-				}
-			}, 100); // Slightly longer delay to ensure DOM update
+				// Scroll to the latest message after AI responds
+				setTimeout(() => {
+					if (!chatContainer) {
+						chatContainer = document.querySelector('.custom-scrollbar');
+					}
+					if (chatContainer) {
+						chatContainer.scrollTop = chatContainer.scrollHeight;
+					}
+				}, 100); // Slightly longer delay to ensure DOM update
 			} else {
 				const errorData = await response.json();
 				console.error('❌ Chat API error response:', {
@@ -560,11 +562,11 @@ if (!auth) throw new Error('Authentication service not available');
 					statusText: response.statusText,
 					errorData
 				});
-				
+
 				// Reset Turnstile on error to allow retry
 				console.log('🔄 Resetting Turnstile after error');
 				resetTurnstile();
-				
+
 				// Make the error message more descriptive
 				const detail = errorData.details || errorData.error || 'Unknown error';
 				throw new Error(`API Error (${response.status}): ${detail}`);
@@ -573,12 +575,12 @@ if (!auth) throw new Error('Authentication service not available');
 			console.error('❌ Chat error:', error);
 			const errorMessage = (error as Error)?.message || 'Unknown error';
 			chatError = errorMessage;
-			
+
 			// Reset Turnstile on error
 			console.log('🔄 Resetting Turnstile after catch error');
 			resetTurnstile();
-			
-		chatHistory = [
+
+			chatHistory = [
 				...chatHistory,
 				{
 					role: 'assistant',
@@ -604,17 +606,23 @@ if (!auth) throw new Error('Authentication service not available');
 	function resetTurnstile() {
 		console.log('🔄 Resetting Turnstile widget...');
 		turnstileToken = '';
-		
-		if (typeof (window as any).turnstile !== 'undefined') {
+
+		if (
+			typeof (window as { turnstile?: { reset: (selector: string) => void } }).turnstile !==
+			'undefined'
+		) {
 			try {
+				const turnstileAPI = (
+					window as unknown as { turnstile: { reset: (selector: string) => void } }
+				).turnstile;
 				// Reset chat widget
 				if (document.getElementById('turnstile-widget-chat')) {
-					(window as any).turnstile.reset('#turnstile-widget-chat');
+					turnstileAPI.reset('#turnstile-widget-chat');
 					console.log('✅ Chat Turnstile widget reset');
 				}
-				// Reset auth widget  
+				// Reset auth widget
 				if (document.getElementById('turnstile-widget')) {
-					(window as any).turnstile.reset('#turnstile-widget');
+					turnstileAPI.reset('#turnstile-widget');
 					console.log('✅ Auth Turnstile widget reset');
 				}
 			} catch (e) {
@@ -761,7 +769,7 @@ if (!auth) throw new Error('Authentication service not available');
 						<h1
 							class="text-4xl font-black font-display tracking-tight neon-text bg-gradient-to-r from-neon-blue via-neon-purple to-neon-green bg-clip-text text-transparent"
 						>
-							MARIANO.AI
+							Mariano's Assistant
 						</h1>
 						<p class="text-sm opacity-80 font-mono text-neon-blue tracking-wider">[v0.06]</p>
 					</div>
@@ -931,13 +939,11 @@ if (!auth) throw new Error('Authentication service not available');
 					</div>
 					<button
 						on:click={sendChat}
-						disabled={!chatMessage.trim() || !turnstileToken}
+						disabled={!chatMessage.trim()}
 						class="px-8 py-4 bg-gradient-to-r from-neon-blue to-neon-purple hover:from-neon-purple hover:to-neon-pink disabled:from-gray-600 disabled:to-gray-700 text-white font-bold rounded-2xl shadow-lg transition-all duration-300 transform hover:scale-105 disabled:scale-100 disabled:opacity-50 border-neon-blue/30 font-mono"
 					>
 						{#if isLoading}
 							[SENDING...]
-						{:else if !turnstileToken}
-							[VERIFY]
 						{:else}
 							[TRANSMIT]
 						{/if}

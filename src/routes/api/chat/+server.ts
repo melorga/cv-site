@@ -28,98 +28,109 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 			return json({ error: 'Invalid JSON format' }, { status: 400 });
 		}
 
-	const { message, turnstileToken } = parsedBody;
+		const { message, turnstileToken } = parsedBody;
 
-	// Get client IP for logging
-	const clientIP = request.headers.get('CF-Connecting-IP') || 
-					 request.headers.get('x-forwarded-for') || 
-					 request.headers.get('x-real-ip') || 
-					 'unknown';
+		// Get client IP for logging
+		const clientIP =
+			request.headers.get('CF-Connecting-IP') ||
+			request.headers.get('x-forwarded-for') ||
+			request.headers.get('x-real-ip') ||
+			'unknown';
 
-	console.log(`[SECURITY] Chat request from IP: ${clientIP}`);
-	console.log(`[SECURITY] User-Agent: ${request.headers.get('user-agent') || 'unknown'}`);
-	console.log(`[SECURITY] Request timestamp: ${new Date().toISOString()}`);
+		console.log(`[SECURITY] Chat request from IP: ${clientIP}`);
+		console.log('[SECURITY] User-Agent received');
+		console.log(`[SECURITY] Request timestamp: ${new Date().toISOString()}`);
 
-	// Validate message
-	if (!message || typeof message !== 'string') {
-		console.log(`[SECURITY] Invalid message format from IP: ${clientIP}`);
-		return json({ error: 'Message is required and must be a string' }, { status: 400 });
-	}
-
-	if (message.length > 1000) {
-		console.log(`[SECURITY] Message too long (${message.length} chars) from IP: ${clientIP}`);
-		return json({ error: 'Message too long (max 1000 characters)' }, { status: 400 });
-	}
-
-	// Basic content filtering
-	const suspiciousPatterns = [
-		/\b(exec|eval|system|shell|cmd)\s*\(/i,
-		/<script[^>]*>.*<\/script>/i,
-		/javascript:/i,
-		/(union|select|insert|update|delete|drop)\s+/i
-	];
-
-	if (suspiciousPatterns.some((pattern) => pattern.test(message))) {
-		console.log(`[SECURITY] Suspicious content detected from IP: ${clientIP} - Message: ${message.substring(0, 100)}...`);
-		return json({ error: 'Invalid message content' }, { status: 400 });
-	}
-
-	console.log(`[SECURITY] Message validation passed for IP: ${clientIP}`);
-
-	// Verify Turnstile token
-	console.log(`[CAPTCHA-API] Checking Turnstile token...`);
-	
-	if (!turnstileToken || typeof turnstileToken !== 'string') {
-		console.log(`[SECURITY] Missing or invalid Turnstile token from IP: ${clientIP}`);
-		return json({ 
-			error: 'CAPTCHA token required',
-			details: 'Security verification failed - please complete the CAPTCHA'
-		}, { status: 403 });
-	}
-
-	// Use cookie-verified token for previously validated sessions
-	if (turnstileToken === 'cookie-verified') {
-		console.log(`[CAPTCHA-API] Using cookie-verified token`);
-		// Cookie verification already handled by verify-captcha endpoint
-	} else {
-		// Validate new Turnstile token
-		console.log('[CAPTCHA-API] Validating fresh Turnstile token');
-		// Validate Turnstile token
-		if (platform?.env?.TURNSTILE_SECRET) {
-			try {
-				console.log('Validating Turnstile token');
-				const formData = new FormData();
-				formData.append('secret', platform.env.TURNSTILE_SECRET);
-				formData.append('response', turnstileToken);
-				formData.append('remoteip', request.headers.get('cf-connecting-ip') || request.headers.get('x-forwarded-for') || '');
-
-				const turnstileResponse = await fetch(
-					'https://challenges.cloudflare.com/turnstile/v0/siteverify',
-					{
-						method: 'POST',
-						body: formData
-					}
-				);
-
-				const turnstileResult = await turnstileResponse.json();
-				console.log('Turnstile validation result:', turnstileResult);
-				
-				if (!turnstileResult.success) {
-					console.log('Turnstile validation failed:', turnstileResult['error-codes']);
-					return json({ 
-						error: 'CAPTCHA verification failed',
-						details: import.meta.env.DEV ? turnstileResult['error-codes'] : undefined
-					}, { status: 403 });
-				}
-				console.log('Turnstile validation successful');
-			} catch (turnstileError) {
-				console.error('Turnstile verification error:', turnstileError);
-				return json({ error: 'CAPTCHA verification error' }, { status: 500 });
-			}
-		} else {
-			console.warn('TURNSTILE_SECRET not configured, skipping validation');
+		// Validate message
+		if (!message || typeof message !== 'string') {
+			console.log(`[SECURITY] Invalid message format from IP: ${clientIP}`);
+			return json({ error: 'Message is required and must be a string' }, { status: 400 });
 		}
-	}
+
+		if (message.length > 1000) {
+			console.log(`[SECURITY] Message too long (${message.length} chars) from IP: ${clientIP}`);
+			return json({ error: 'Message too long (max 1000 characters)' }, { status: 400 });
+		}
+
+		// Basic content filtering
+		const suspiciousPatterns = [
+			/\b(exec|eval|system|shell|cmd)\s*\(/i,
+			/<script[^>]*>.*<\/script>/i,
+			/javascript:/i,
+			/(union|select|insert|update|delete|drop)\s+/i
+		];
+
+		if (suspiciousPatterns.some((pattern) => pattern.test(message))) {
+			console.log(
+				`[SECURITY] Suspicious content detected from IP: ${clientIP} - Message: ${message.substring(0, 100)}...`
+			);
+			return json({ error: 'Invalid message content' }, { status: 400 });
+		}
+
+		console.log(`[SECURITY] Message validation passed for IP: ${clientIP}`);
+
+		// Verify Turnstile token
+		console.log(`[CAPTCHA-API] Checking Turnstile token...`);
+
+		if (!turnstileToken || typeof turnstileToken !== 'string') {
+			console.log(`[SECURITY] Missing or invalid Turnstile token from IP: ${clientIP}`);
+			return json(
+				{
+					error: 'CAPTCHA token required',
+					details: 'Security verification failed - please complete the CAPTCHA'
+				},
+				{ status: 403 }
+			);
+		}
+
+		// Handle session-based verification (middleware already validated)
+		if (turnstileToken === 'session-verified') {
+			console.log(`[CAPTCHA-API] Using session-verified token - middleware already validated`);
+			// Session verification already handled by middleware, no need to validate again
+		} else {
+			// Validate fresh Turnstile token (for direct API calls)
+			console.log('[CAPTCHA-API] Validating fresh Turnstile token');
+			if (platform?.env?.TURNSTILE_SECRET) {
+				try {
+					console.log('Validating Turnstile token');
+					const formData = new FormData();
+					formData.append('secret', platform.env.TURNSTILE_SECRET);
+					formData.append('response', turnstileToken);
+					formData.append(
+						'remoteip',
+						request.headers.get('cf-connecting-ip') || request.headers.get('x-forwarded-for') || ''
+					);
+
+					const turnstileResponse = await fetch(
+						'https://challenges.cloudflare.com/turnstile/v0/siteverify',
+						{
+							method: 'POST',
+							body: formData
+						}
+					);
+
+					const turnstileResult = await turnstileResponse.json();
+					console.log('Turnstile validation result:', turnstileResult);
+
+					if (!turnstileResult.success) {
+						console.log('Turnstile validation failed:', turnstileResult['error-codes']);
+						return json(
+							{
+								error: 'CAPTCHA verification failed',
+								details: import.meta.env.DEV ? turnstileResult['error-codes'] : undefined
+							},
+							{ status: 403 }
+						);
+					}
+					console.log('Turnstile validation successful');
+				} catch (turnstileError) {
+					console.error('Turnstile verification error:', turnstileError);
+					return json({ error: 'CAPTCHA verification error' }, { status: 500 });
+				}
+			} else {
+				console.warn('TURNSTILE_SECRET not configured, skipping validation');
+			}
+		}
 
 		// Validate environment variables
 		if (!platform?.env?.GROQ_API_KEY) {
@@ -175,7 +186,7 @@ Use the following information about his professional background to answer questi
 PROFESSIONAL INFORMATION:
 ${context}
 
-Respond as if you are representing Mariano's professional profile to potential employers or recruiters. Be helpful, accurate, and professional. If asked about something not covered in the provided information, acknowledge that politely and offer to clarify what information is available.`;
+Respond as if you are representing Mariano's professional profile to potential employers or recruiters. Be helpful, accurate, and professional. If asked about something not covered in the provided information, acknowledge that politely and offer to clarify what information is available. It is important to concise, sometimes less is more, so avoid big chunks of text.`;
 
 		console.log('Sending request to Groq API');
 

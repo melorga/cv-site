@@ -20,7 +20,7 @@ export async function initFirebase() {
 	try {
 		// Dynamically import Firebase modules to avoid SSR issues
 		const { initializeApp } = await import('firebase/app');
-		const { getAuth, connectAuthEmulator } = await import('firebase/auth');
+		const { getAuth } = await import('firebase/auth');
 
 		// Try to get Firebase config from environment
 		let config;
@@ -29,7 +29,7 @@ export async function initFirebase() {
 		if (envConfig) {
 			try {
 				config = JSON.parse(envConfig);
-				console.log('🔥 Firebase config loaded from environment');
+				console.log('🔥 Firebase configuration loaded');
 			} catch (parseError) {
 				console.error('❌ Failed to parse VITE_FIREBASE_CONFIG:', parseError);
 				throw new Error('Invalid Firebase configuration format');
@@ -51,7 +51,6 @@ export async function initFirebase() {
 		// Initialize Firebase
 		app = initializeApp(config);
 		auth = getAuth(app);
-
 
 		isInitialized = true;
 		console.log('✅ Firebase initialized successfully');

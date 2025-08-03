@@ -42,7 +42,7 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 		if (outcome.success) {
 			return json({ valid: true });
 		} else {
-			console.warn('Turnstile validation failed:', outcome['error-codes']);
+			console.warn('Turnstile validation failed');
 			return json(
 				{
 					valid: false,
