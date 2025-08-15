@@ -954,48 +954,29 @@
 
 		<!-- Logged Out View: Authentication Form -->
 	{:else}
-		<div
-			class="relative w-full max-w-lg glass-dark rounded-3xl shadow-2xl p-10 space-y-8 border border-neon-blue/20 backdrop-blur-xl"
-		>
-			<!-- Header with sophisticated branding -->
-			<div class="text-center space-y-4">
-				<div class="flex justify-center">
-					<div class="relative w-20 h-20 transform-3d group">
-						<div
-							class="absolute inset-0 bg-gradient-to-br from-neon-blue to-neon-purple rounded-2xl rotate-45 transform group-hover:rotate-[225deg] transition-transform duration-700 animate-glow"
-						></div>
-						<div class="absolute inset-2 bg-slate-900 rounded-xl flex items-center justify-center">
-							<svg
-								class="w-10 h-10 text-neon-blue animate-pulse"
-								fill="none"
-								stroke="currentColor"
-								viewBox="0 0 24 24"
-							>
-								<path
-									stroke-linecap="round"
-									stroke-linejoin="round"
-									stroke-width="2"
-									d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-								/>
-							</svg>
-						</div>
-					</div>
-				</div>
-				<h1
-					class="text-4xl font-black font-display tracking-tight neon-text bg-gradient-to-r from-neon-blue via-neon-purple to-neon-green bg-clip-text text-transparent"
-				>
-					ACCESS_CONTROL
+		<!-- Auth Landing: two-column layout for clarity -->
+		<div class="relative w-full max-w-6xl grid md:grid-cols-2 gap-10 items-start">
+			<!-- Intro panel -->
+			<section class="rounded-3xl p-8 md:p-10 glass-dark border border-white/10">
+				<h1 class="text-3xl md:text-4xl font-semibold tracking-tight text-white/90">
+					Mariano’s AI Assistant
 				</h1>
-				<p class="text-gray-300 font-mono text-sm tracking-wider">[AUTHENTICATION_REQUIRED]</p>
-				<div
-					class="w-24 h-px bg-gradient-to-r from-transparent via-neon-blue to-transparent mx-auto"
-				></div>
-			</div>
+				<p class="mt-3 text-white/70">
+					Explore Mariano’s background, skills, and projects through a private, focused assistant. To keep the chat secure and fast, please verify you’re human.
+				</p>
+				<ul class="mt-6 space-y-2 text-sm text-white/70">
+					<li class="flex items-center gap-2"><span class="h-2 w-2 rounded-full bg-emerald-400"></span> Privacy‑first</li>
+					<li class="flex items-center gap-2"><span class="h-2 w-2 rounded-full bg-cyan-400"></span> Turnstile‑protected</li>
+					<li class="flex items-center gap-2"><span class="h-2 w-2 rounded-full bg-fuchsia-400"></span> No spam, no noise</li>
+				</ul>
+			</section>
 
-			<form on:submit={handleAuth} class="space-y-6">
+			<!-- Form card -->
+			<div class="glass-dark rounded-3xl shadow-2xl p-8 md:p-10 space-y-8 border border-white/10">
+				<form on:submit={handleAuth} class="space-y-6">
 				<div class="space-y-4">
 					<div>
-						<label for="email" class="block text-sm font-mono font-medium text-neon-blue mb-2"
+						<label for="email" class="block text-sm font-mono font-medium text-white/90 mb-2"
 							>[EMAIL_ADDRESS]</label
 						>
 						<input
@@ -1006,13 +987,13 @@
 							bind:value={email}
 							required
 							aria-describedby="email-help"
-							class="w-full px-6 py-4 bg-slate-800/50 dark:bg-matrix-dark/50 border border-neon-blue/30 rounded-2xl shadow-lg text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-neon-blue focus:border-transparent transition-all duration-300 font-mono backdrop-blur-sm"
+							class="w-full px-6 py-4 bg-slate-900/60 dark:bg-matrix-dark/60 border border-white/10 rounded-2xl shadow-lg text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-300 focus:border-transparent transition-all duration-300 font-mono backdrop-blur-sm"
 							placeholder="user@domain.com"
 						/>
 					</div>
-
+					
 					<div>
-						<label for="password" class="block text-sm font-mono font-medium text-neon-purple mb-2"
+						<label for="password" class="block text-sm font-mono font-medium text-white/90 mb-2"
 							>[PASSWORD]</label
 						>
 						<input
@@ -1023,7 +1004,7 @@
 							bind:value={password}
 							required
 							aria-describedby="password-help"
-							class="w-full px-6 py-4 bg-slate-800/50 dark:bg-matrix-dark/50 border border-neon-purple/30 rounded-2xl shadow-lg text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-neon-purple focus:border-transparent transition-all duration-300 font-mono backdrop-blur-sm"
+							class="w-full px-6 py-4 bg-slate-900/60 dark:bg-matrix-dark/60 border border-white/10 rounded-2xl shadow-lg text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-fuchsia-300 focus:border-transparent transition-all duration-300 font-mono backdrop-blur-sm"
 							placeholder="••••••••"
 						/>
 					</div>
@@ -1033,7 +1014,7 @@
 
 				{#if authError}
 					<div
-						class="p-4 bg-gradient-to-r from-red-500/20 to-red-600/20 border border-red-500/30 rounded-2xl"
+						class="p-4 bg-red-500/10 border border-red-500/30 rounded-2xl"
 					>
 						<p class="text-red-400 text-sm font-mono text-center">[AUTH_ERROR] {authError}</p>
 					</div>
@@ -1042,7 +1023,7 @@
 				<button
 					type="submit"
 					disabled={authLoading}
-					class="w-full py-4 px-6 bg-gradient-to-r from-neon-blue to-neon-purple hover:from-neon-purple hover:to-neon-pink disabled:from-gray-600 disabled:to-gray-700 text-white font-bold rounded-2xl shadow-lg transition-all duration-300 transform hover:scale-105 disabled:scale-100 disabled:opacity-50 border border-neon-blue/30 font-mono"
+					class="w-full py-4 px-6 bg-gradient-to-r from-cyan-500 to-fuchsia-500 hover:from-cyan-400 hover:to-fuchsia-400 disabled:from-gray-600 disabled:to-gray-700 text-white font-semibold rounded-2xl shadow-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-0 focus:ring-cyan-300 font-mono"
 				>
 					{#if authLoading}
 						<div class="flex items-center justify-center space-x-2">
@@ -1059,7 +1040,7 @@
 
 			<div class="text-center">
 				<div
-					class="w-32 h-px bg-gradient-to-r from-transparent via-neon-green/50 to-transparent mx-auto mb-4"
+					class="w-32 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent mx-auto mb-4"
 				></div>
 				<p class="text-gray-400 text-sm font-mono">
 					{isLogin ? '[NO_ACCOUNT?]' : '[EXISTING_USER?]'}
@@ -1069,10 +1050,11 @@
 						isLogin = !isLogin;
 						authError = '';
 					}}
-					class="mt-2 text-neon-green hover:text-neon-blue transition-colors duration-300 font-mono font-bold"
+					class="mt-2 text-cyan-300 hover:text-fuchsia-300 transition-colors duration-300 font-mono font-bold"
 				>
 					[{isLogin ? 'CREATE_ACCOUNT' : 'LOGIN_INSTEAD'}]
 				</button>
+			</div>
 			</div>
 		</div>
 	{/if}
