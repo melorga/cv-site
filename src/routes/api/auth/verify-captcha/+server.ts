@@ -1,6 +1,34 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
+function toBase64Url(data: ArrayBuffer | string): string {
+	let bytes: Uint8Array;
+	if (typeof data === 'string') {
+		bytes = new TextEncoder().encode(data);
+	} else {
+		bytes = new Uint8Array(data);
+	}
+	// Standard base64
+	const bin = Array.from(bytes)
+		.map((b) => String.fromCharCode(b))
+		.join('');
+	const b64 = typeof btoa !== 'undefined' ? btoa(bin) : Buffer.from(bytes).toString('base64');
+	return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+}
+
+async function hmacSha256Base64Url(keyStr: string, messageB64Url: string): Promise<string> {
+	const enc = new TextEncoder();
+	const key = await crypto.subtle.importKey(
+		'raw',
+		enc.encode(keyStr),
+		{ name: 'HMAC', hash: 'SHA-256' },
+		false,
+		['sign']
+	);
+	const sig = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(messageB64Url));
+	return toBase64Url(sig);
+}
+
 export const POST: RequestHandler = async ({ request, platform, cookies }) => {
 	try {
 		console.log('[CAPTCHA] Verification request received');
@@ -74,34 +102,26 @@ export const POST: RequestHandler = async ({ request, platform, cookies }) => {
 			);
 		}
 
-		// Generate a verification session token
-		const verificationToken = crypto.randomUUID();
-		const expiresAt = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes
+		// Generate a signed verification session token (httpOnly)
+		const exp = Date.now() + 30 * 60 * 1000; // 30 minutes
+		const payloadObj = { exp, rnd: crypto.randomUUID(), v: 1 };
+		const payloadJson = JSON.stringify(payloadObj);
+		const payloadB64 = toBase64Url(payloadJson);
+		const sigB64 = await hmacSha256Base64Url(platform.env.TURNSTILE_SECRET, payloadB64);
+		const captchaSessionToken = `${payloadB64}.${sigB64}`;
 
-		// Store verification in secure cookie (accessible to JavaScript for client-side verification)
-		cookies.set('captcha_verified', verificationToken, {
+		cookies.set('captcha_session', captchaSessionToken, {
 			path: '/',
-			httpOnly: false, // Allow JavaScript access for client-side verification
-			secure: process.env.NODE_ENV === 'production',
-			sameSite: 'strict',
-			maxAge: 30 * 60 // 30 minutes
-		});
-
-		// Also store expiration time (as timestamp for easier comparison)
-		cookies.set('captcha_expires', expiresAt.getTime().toString(), {
-			path: '/',
-			httpOnly: false, // Allow JavaScript access for client-side verification
-			secure: process.env.NODE_ENV === 'production',
-			sameSite: 'strict',
-			maxAge: 30 * 60 // 30 minutes
+			httpOnly: true,
+			secure: true,
+			sameSite: 'lax',
+			maxAge: 30 * 60
 		});
 
 		console.log(`[CAPTCHA] ✅ Verification successful for IP ${clientIP}`);
 
 		return json({
 			valid: true,
-			verificationToken,
-			expiresAt: expiresAt.toISOString(),
 			message: 'CAPTCHA verified successfully'
 		});
 	} catch (error) {

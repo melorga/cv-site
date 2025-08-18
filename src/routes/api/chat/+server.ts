@@ -28,7 +28,7 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 			return json({ error: 'Invalid JSON format' }, { status: 400 });
 		}
 
-		const { message, turnstileToken } = parsedBody;
+		const { message } = parsedBody;
 
 		// Get client IP for logging
 		const clientIP =
@@ -69,68 +69,9 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 
 		console.log(`[SECURITY] Message validation passed for IP: ${clientIP}`);
 
-		// Verify Turnstile token
-		console.log(`[CAPTCHA-API] Checking Turnstile token...`);
-
-		if (!turnstileToken || typeof turnstileToken !== 'string') {
-			console.log(`[SECURITY] Missing or invalid Turnstile token from IP: ${clientIP}`);
-			return json(
-				{
-					error: 'CAPTCHA token required',
-					details: 'Security verification failed - please complete the CAPTCHA'
-				},
-				{ status: 403 }
-			);
-		}
-
-		// Handle session-based verification (middleware already validated)
-		if (turnstileToken === 'session-verified') {
-			console.log(`[CAPTCHA-API] Using session-verified token - middleware already validated`);
-			// Session verification already handled by middleware, no need to validate again
-		} else {
-			// Validate fresh Turnstile token (for direct API calls)
-			console.log('[CAPTCHA-API] Validating fresh Turnstile token');
-			if (platform?.env?.TURNSTILE_SECRET) {
-				try {
-					console.log('Validating Turnstile token');
-					const formData = new FormData();
-					formData.append('secret', platform.env.TURNSTILE_SECRET);
-					formData.append('response', turnstileToken);
-					formData.append(
-						'remoteip',
-						request.headers.get('cf-connecting-ip') || request.headers.get('x-forwarded-for') || ''
-					);
-
-					const turnstileResponse = await fetch(
-						'https://challenges.cloudflare.com/turnstile/v0/siteverify',
-						{
-							method: 'POST',
-							body: formData
-						}
-					);
-
-					const turnstileResult = await turnstileResponse.json();
-					console.log('Turnstile validation result:', turnstileResult);
-
-					if (!turnstileResult.success) {
-						console.log('Turnstile validation failed:', turnstileResult['error-codes']);
-						return json(
-							{
-								error: 'CAPTCHA verification failed',
-								details: import.meta.env.DEV ? turnstileResult['error-codes'] : undefined
-							},
-							{ status: 403 }
-						);
-					}
-					console.log('Turnstile validation successful');
-				} catch (turnstileError) {
-					console.error('Turnstile verification error:', turnstileError);
-					return json({ error: 'CAPTCHA verification error' }, { status: 500 });
-				}
-			} else {
-				console.warn('TURNSTILE_SECRET not configured, skipping validation');
-			}
-		}
+		// CAPTCHA verification is enforced by middleware using the httpOnly captcha_session cookie.
+		// No need to accept or validate any client-provided CAPTCHA tokens here.
+		console.log('[CAPTCHA] Enforcement handled by middleware via captcha_session cookie');
 
 		// Validate environment variables
 		if (!platform?.env?.GROQ_API_KEY) {

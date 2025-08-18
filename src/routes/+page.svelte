@@ -222,7 +222,6 @@
 			}, 5000);
 		}
 
-
 		// Helper: wait until window.turnstile is available, then render
 		const waitForTurnstile = (retries = 20, interval = 150) => {
 			return new Promise<void>((resolve, reject) => {
@@ -267,7 +266,9 @@
 				renderTurnstile();
 			} catch (e) {
 				console.warn('⚠️ Render immediately after load failed, waiting for API...', e);
-				waitForTurnstile().catch((err) => console.error('❌ Turnstile failed to become ready:', err));
+				waitForTurnstile().catch((err) =>
+					console.error('❌ Turnstile failed to become ready:', err)
+				);
 			}
 		};
 		script.onerror = (err) => {
@@ -478,11 +479,13 @@
 			console.log('🔄 Resetting CAPTCHA session state on logout...');
 			turnstileToken = '';
 
-			// Clear any existing CAPTCHA verification cookies to reset session
-			document.cookie =
-				'captcha_verified=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=Strict';
-			document.cookie =
-				'captcha_expires=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=Strict';
+			// Invalidate server-side CAPTCHA session (httpOnly cookie)
+			try {
+				await fetch('/api/auth/logout', { method: 'POST' });
+				console.log('✅ Server-side CAPTCHA session cleared');
+			} catch (e) {
+				console.warn('⚠️ Failed to call logout endpoint for CAPTCHA session:', e);
+			}
 
 			// Reset authentication Turnstile widget for next user
 			if (
@@ -522,9 +525,8 @@
 			return;
 		}
 
-		// Chat uses session-based authentication - no CAPTCHA required here
-		console.log('🔐 [CLIENT]: Using session-based authentication for chat');
-		const chatTurnstileToken = 'session-verified'; // Use session-based verification
+		// Chat uses session-based authentication via httpOnly captcha_session cookie
+		console.log('🔐 [CLIENT]: Chat uses middleware-validated CAPTCHA session');
 
 		const userMessage = {
 			role: 'user',
@@ -550,7 +552,7 @@
 
 		try {
 			console.log('📤 Sending chat message:', currentMessage);
-			console.log('📤 Using session-based verification for chat');
+			console.log('📤 Session/cookie-based verification handled by middleware');
 
 			const response = await fetch('/api/chat', {
 				method: 'POST',
@@ -558,8 +560,7 @@
 					'Content-Type': 'application/json'
 				},
 				body: JSON.stringify({
-					message: currentMessage,
-					turnstileToken: chatTurnstileToken
+					message: currentMessage
 				})
 			});
 
@@ -845,7 +846,7 @@
 						Sign out
 					</button>
 				</div>
-				                <!-- Background overlays removed for a cleaner, more professional header -->
+				<!-- Background overlays removed for a cleaner, more professional header -->
 			</header>
 
 			<div
@@ -860,9 +861,9 @@
 								class="max-w-2xl px-6 py-4 rounded-2xl shadow-lg bg-gradient-to-r from-neon-blue/90 to-neon-purple/90 text-white border-neon-blue/30 backdrop-blur-sm"
 							>
 								<p class="font-medium leading-relaxed">{entry.message}</p>
-								                                <span class="text-xs text-white/70 block text-right mt-2 font-sans"
-                                    >{new Date(entry.timestamp).toLocaleTimeString()}</span
-                                >
+								<span class="text-xs text-white/70 block text-right mt-2 font-sans"
+									>{new Date(entry.timestamp).toLocaleTimeString()}</span
+								>
 							</div>
 						{:else}
 							<div
@@ -880,9 +881,9 @@
 										<p class="font-medium leading-relaxed text-gray-100 dark:text-gray-200">
 											{entry.message}
 										</p>
-										                                        <span class="text-xs text-neon-green/80 block mt-2 font-sans"
-                                            >AI response · {new Date(entry.timestamp).toLocaleTimeString()}</span
-                                        >
+										<span class="text-xs text-neon-green/80 block mt-2 font-sans"
+											>AI response · {new Date(entry.timestamp).toLocaleTimeString()}</span
+										>
 									</div>
 								</div>
 							</div>
@@ -972,7 +973,7 @@
 		</div>
 
 		<!-- Logged Out View: Authentication Form -->
-{:else}
+	{:else}
 		<!-- Auth Landing: two-column layout for clarity -->
 		<div class="relative w-full max-w-6xl grid md:grid-cols-2 gap-10 items-start">
 			<!-- Intro panel -->
@@ -981,97 +982,106 @@
 					Mariano’s AI Assistant
 				</h1>
 				<p class="mt-3 text-white/70">
-					Explore Mariano’s background, skills, and projects through a private, focused assistant. To keep the chat secure and fast, please verify you’re human.
+					Explore Mariano’s background, skills, and projects through a private, focused assistant.
+					To keep the chat secure and fast, please verify you’re human.
 				</p>
 				<ul class="mt-6 space-y-2 text-sm text-white/70">
-					<li class="flex items-center gap-2"><span class="h-2 w-2 rounded-full bg-emerald-400"></span> Privacy‑first</li>
-					<li class="flex items-center gap-2"><span class="h-2 w-2 rounded-full bg-cyan-400"></span> Turnstile‑protected</li>
-					<li class="flex items-center gap-2"><span class="h-2 w-2 rounded-full bg-fuchsia-400"></span> No spam, no noise</li>
+					<li class="flex items-center gap-2">
+						<span class="h-2 w-2 rounded-full bg-emerald-400"></span> Privacy‑first
+					</li>
+					<li class="flex items-center gap-2">
+						<span class="h-2 w-2 rounded-full bg-cyan-400"></span> Turnstile‑protected
+					</li>
+					<li class="flex items-center gap-2">
+						<span class="h-2 w-2 rounded-full bg-fuchsia-400"></span> No spam, no noise
+					</li>
 				</ul>
 			</section>
 
 			<!-- Form card -->
 			<div class="glass-dark rounded-3xl shadow-2xl p-8 md:p-10 space-y-8 border border-white/10">
 				<form on:submit={handleAuth} class="space-y-6">
-				<div class="space-y-4">
-					<div>
-						<label for="email" class="block text-sm font-medium text-white/90 mb-2 font-sans"
-							>Email address</label
-						>
-						<input
-							type="email"
-							id="email"
-							name="email"
-							autocomplete="email"
-							bind:value={email}
-							required
-							aria-describedby="email-help"
-							class="w-full px-6 py-4 bg-slate-900/60 dark:bg-matrix-dark/60 border border-white/10 rounded-2xl shadow-lg text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-300 focus:border-transparent transition-all duration-300 font-sans backdrop-blur-sm"
-							placeholder="user@domain.com"
-						/>
-					</div>
-					
-					<div>
-						<label for="password" class="block text-sm font-medium text-white/90 mb-2 font-sans"
-							>Password</label
-						>
-						<input
-							type="password"
-							id="password"
-							name="password"
-							autocomplete={isLogin ? 'current-password' : 'new-password'}
-							bind:value={password}
-							required
-							aria-describedby="password-help"
-							class="w-full px-6 py-4 bg-slate-900/60 dark:bg-matrix-dark/60 border border-white/10 rounded-2xl shadow-lg text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-fuchsia-300 focus:border-transparent transition-all duration-300 font-sans backdrop-blur-sm"
-							placeholder="••••••••"
-						/>
-					</div>
-				</div>
-
-				<div id="turnstile-widget" class="flex justify-center py-4"></div>
-
-				{#if authError}
-					<div class="p-4 bg-red-500/10 border border-red-500/30 rounded-2xl">
-						<p class="text-red-400 text-sm font-sans text-center">Authentication error: {authError}</p>
-					</div>
-				{/if}
-
-				<button
-					type="submit"
-					disabled={authLoading}
-					class="w-full py-4 px-6 bg-gradient-to-r from-cyan-500 to-fuchsia-500 hover:from-cyan-400 hover:to-fuchsia-400 disabled:from-gray-600 disabled:to-gray-700 text-white font-semibold rounded-2xl shadow-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-0 focus:ring-cyan-300 font-sans"
-				>
-					{#if authLoading}
-						<div class="flex items-center justify-center space-x-2">
-							<div
-								class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"
-							></div>
-							<span>Authenticating…</span>
+					<div class="space-y-4">
+						<div>
+							<label for="email" class="block text-sm font-medium text-white/90 mb-2 font-sans"
+								>Email address</label
+							>
+							<input
+								type="email"
+								id="email"
+								name="email"
+								autocomplete="email"
+								bind:value={email}
+								required
+								aria-describedby="email-help"
+								class="w-full px-6 py-4 bg-slate-900/60 dark:bg-matrix-dark/60 border border-white/10 rounded-2xl shadow-lg text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-300 focus:border-transparent transition-all duration-300 font-sans backdrop-blur-sm"
+								placeholder="user@domain.com"
+							/>
 						</div>
-					{:else}
-						{isLogin ? 'Log in' : 'Create account'}
-					{/if}
-				</button>
-			</form>
 
-			<div class="text-center">
-				<div
-					class="w-32 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent mx-auto mb-4"
-				></div>
-				<p class="text-gray-400 text-sm font-sans">
-					{isLogin ? "Don't have an account?" : 'Already have an account?'}
-				</p>
-				<button
-					on:click={() => {
-						isLogin = !isLogin;
-						authError = '';
-					}}
-					class="mt-2 text-cyan-300 hover:text-fuchsia-300 transition-colors duration-300 font-sans font-semibold"
-				>
-					{isLogin ? 'Create account' : 'Log in instead'}
-				</button>
-			</div>
+						<div>
+							<label for="password" class="block text-sm font-medium text-white/90 mb-2 font-sans"
+								>Password</label
+							>
+							<input
+								type="password"
+								id="password"
+								name="password"
+								autocomplete={isLogin ? 'current-password' : 'new-password'}
+								bind:value={password}
+								required
+								aria-describedby="password-help"
+								class="w-full px-6 py-4 bg-slate-900/60 dark:bg-matrix-dark/60 border border-white/10 rounded-2xl shadow-lg text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-fuchsia-300 focus:border-transparent transition-all duration-300 font-sans backdrop-blur-sm"
+								placeholder="••••••••"
+							/>
+						</div>
+					</div>
+
+					<div id="turnstile-widget" class="flex justify-center py-4"></div>
+
+					{#if authError}
+						<div class="p-4 bg-red-500/10 border border-red-500/30 rounded-2xl">
+							<p class="text-red-400 text-sm font-sans text-center">
+								Authentication error: {authError}
+							</p>
+						</div>
+					{/if}
+
+					<button
+						type="submit"
+						disabled={authLoading}
+						class="w-full py-4 px-6 bg-gradient-to-r from-cyan-500 to-fuchsia-500 hover:from-cyan-400 hover:to-fuchsia-400 disabled:from-gray-600 disabled:to-gray-700 text-white font-semibold rounded-2xl shadow-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-0 focus:ring-cyan-300 font-sans"
+					>
+						{#if authLoading}
+							<div class="flex items-center justify-center space-x-2">
+								<div
+									class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"
+								></div>
+								<span>Authenticating…</span>
+							</div>
+						{:else}
+							{isLogin ? 'Log in' : 'Create account'}
+						{/if}
+					</button>
+				</form>
+
+				<div class="text-center">
+					<div
+						class="w-32 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent mx-auto mb-4"
+					></div>
+					<p class="text-gray-400 text-sm font-sans">
+						{isLogin ? "Don't have an account?" : 'Already have an account?'}
+					</p>
+					<button
+						on:click={() => {
+							isLogin = !isLogin;
+							authError = '';
+						}}
+						class="mt-2 text-cyan-300 hover:text-fuchsia-300 transition-colors duration-300 font-sans font-semibold"
+					>
+						{isLogin ? 'Create account' : 'Log in instead'}
+					</button>
+				</div>
 			</div>
 		</div>
 	{/if}
