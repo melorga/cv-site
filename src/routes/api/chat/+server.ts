@@ -93,26 +93,72 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 
 		console.log('Groq client initialized');
 
-		// For now, let's try a simple approach first - get all stored vectors
-		// In production, you'd want to implement proper vector search
-		const kvKeys = await platform.env.PROFILE_VECTORS.list();
-		console.log('Found KV keys:', kvKeys.keys.length);
+		// Aggregate embeddings across all KV keys using pagination and fair sampling
+		const kv = platform.env.PROFILE_VECTORS;
+		let cursor: string | undefined = undefined;
+		let totalKeysFetched = 0;
+		const maxKeysToFetch = 1000; // safety cap
+		const allKeys: { name: string }[] = [];
+
+		while (true) {
+			const page = await kv.list({ cursor });
+			allKeys.push(...page.keys);
+			totalKeysFetched += page.keys.length;
+			cursor = (page as any).cursor as string | undefined;
+			if ((page as any).list_complete || !cursor || totalKeysFetched >= maxKeysToFetch) break;
+		}
+
+		console.log('Total KV keys discovered:', allKeys.length);
+
+		// Group keys by logical document (best-effort):
+		// - New scheme: docs/{fileBase}/{runId}/chunk-{i}
+		// - Legacy scheme: {file}-chunk-{i}
+		const groups = new Map<string, string[]>();
+		for (const k of allKeys) {
+			const name = k.name;
+			let groupId: string;
+			if (name.startsWith('docs/')) {
+				const parts = name.split('/');
+				groupId = parts.length >= 3 ? `${parts[0]}/${parts[1]}` : 'unknown'; // docs/fileBase
+			} else {
+				// legacy single-level key names, derive group from prefix before '-chunk-'
+				const m = name.match(/^(.*?)-chunk-\d+$/);
+				groupId = m ? m[1] : 'unknown';
+			}
+			if (!groups.has(groupId)) groups.set(groupId, []);
+			groups.get(groupId)!.push(name);
+		}
+
+		// Fair sampling: cap total chunks but sample up to N per group
+		const maxTotalChunks = 50;
+		const maxPerGroup = 12;
+		const selectedKeys: string[] = [];
+		for (const [, names] of groups) {
+			// simple deterministic order
+			names.sort();
+			for (const n of names.slice(0, maxPerGroup)) {
+				if (selectedKeys.length >= maxTotalChunks) break;
+				selectedKeys.push(n);
+			}
+			if (selectedKeys.length >= maxTotalChunks) break;
+		}
+
+		// If grouping failed or too few, fallback to global selection
+		if (selectedKeys.length === 0) {
+			selectedKeys.push(...allKeys.map((k) => k.name).slice(0, Math.min(allKeys.length, maxTotalChunks)));
+		}
 
 		const contextChunks: string[] = [];
-
-		// Get all stored vectors and their content
-		for (const key of kvKeys.keys.slice(0, 10)) {
-			// Limit to first 10 for now
+		for (const keyName of selectedKeys) {
 			try {
-				const stored = await platform.env.PROFILE_VECTORS.get(key.name);
-				if (stored) {
-					const data = JSON.parse(stored);
-					if (data.content) {
-						contextChunks.push(data.content);
-					}
+				const stored = await kv.get(keyName);
+				if (!stored) continue;
+				const data = JSON.parse(stored);
+				if (data?.content && typeof data.content === 'string') {
+					contextChunks.push(data.content);
 				}
-			} catch {
-				console.warn('Failed to parse stored data for key:', key.name);
+			} catch (e) {
+				console.warn('Failed to parse stored data for key:', keyName);
 			}
 		}
 
