@@ -58,9 +58,14 @@
 			const savedTheme = localStorage.getItem('theme');
 			const savedContrast = localStorage.getItem('highContrast');
 
-			if (savedTheme === 'dark') {
+			// Default to dark if no preference has been stored
+			if (!savedTheme) {
 				isDarkMode = true;
 				document.documentElement.classList.add('dark');
+				localStorage.setItem('theme', 'dark');
+			} else {
+				isDarkMode = savedTheme === 'dark';
+				document.documentElement.classList.toggle('dark', isDarkMode);
 			}
 
 			if (savedContrast === 'true') {
@@ -217,10 +222,36 @@
 			}, 5000);
 		}
 
-		// Check if Turnstile is already loaded to prevent duplicate loading
-		if (document.querySelector('script[src*="turnstile"]')) {
-			console.log('🔄 Turnstile script already exists, rendering...');
-			renderTurnstile();
+
+		// Helper: wait until window.turnstile is available, then render
+		const waitForTurnstile = (retries = 20, interval = 150) => {
+			return new Promise<void>((resolve, reject) => {
+				let attempts = 0;
+				const timer = setInterval(() => {
+					attempts++;
+					const available = typeof (window as { turnstile?: unknown }).turnstile !== 'undefined';
+					if (available) {
+						clearInterval(timer);
+						console.log('✅ Turnstile API available, rendering...');
+						try {
+							renderTurnstile();
+							resolve();
+						} catch (e) {
+							reject(e);
+						}
+					} else if (attempts >= retries) {
+						clearInterval(timer);
+						reject(new Error('Turnstile API not available after waiting.'));
+					}
+				}, interval);
+			});
+		};
+
+		// Check if Turnstile is already present on the page
+		const existing = document.querySelector('script[src*="turnstile"]');
+		if (existing) {
+			console.log('🔄 Turnstile script already exists. Waiting for API, then rendering...');
+			waitForTurnstile().catch((e) => console.warn('⚠️ Turnstile wait error:', e));
 			return;
 		}
 
@@ -232,7 +263,12 @@
 		// Add explicit loading completion handling
 		script.onload = () => {
 			console.log('✅ Turnstile API loaded successfully');
-			renderTurnstile();
+			try {
+				renderTurnstile();
+			} catch (e) {
+				console.warn('⚠️ Render immediately after load failed, waiting for API...', e);
+				waitForTurnstile().catch((err) => console.error('❌ Turnstile failed to become ready:', err));
+			}
 		};
 		script.onerror = (err) => {
 			console.error('❌ Failed to load Turnstile API:', err);
@@ -804,29 +840,12 @@
 					</button>
 					<button
 						on:click={handleLogout}
-						class="px-6 py-3 text-sm font-mono font-bold bg-gradient-to-r from-red-500/20 to-red-600/20 hover:from-red-500/40 hover:to-red-600/40 rounded-2xl transition-all duration-300 transform hover:scale-105 border border-red-500/30 text-red-400"
+						class="px-6 py-3 text-sm font-semibold bg-gradient-to-r from-red-500/20 to-red-600/20 hover:from-red-500/40 hover:to-red-600/40 rounded-2xl transition-all duration-300 transform hover:scale-105 border border-red-500/30 text-red-300"
 					>
-						[DISCONNECT]
+						Sign out
 					</button>
 				</div>
-				<!-- Matrix-style background -->
-				<div class="absolute inset-0 opacity-5">
-					<div class="absolute top-4 left-4 font-mono text-xs text-neon-green animate-pulse">
-						01010011 01101111 01101100
-					</div>
-					<div
-						class="absolute top-8 right-8 font-mono text-xs text-neon-blue animate-pulse"
-						style="animation-delay: 1s;"
-					>
-						11100101 01011010
-					</div>
-					<div
-						class="absolute bottom-4 left-8 font-mono text-xs text-neon-purple animate-pulse"
-						style="animation-delay: 2s;"
-					>
-						01000001 01001001
-					</div>
-				</div>
+				                <!-- Background overlays removed for a cleaner, more professional header -->
 			</header>
 
 			<div
@@ -841,9 +860,9 @@
 								class="max-w-2xl px-6 py-4 rounded-2xl shadow-lg bg-gradient-to-r from-neon-blue/90 to-neon-purple/90 text-white border-neon-blue/30 backdrop-blur-sm"
 							>
 								<p class="font-medium leading-relaxed">{entry.message}</p>
-								<span class="text-xs text-white/70 block text-right mt-2 font-mono"
-									>{new Date(entry.timestamp).toLocaleTimeString()}</span
-								>
+								                                <span class="text-xs text-white/70 block text-right mt-2 font-sans"
+                                    >{new Date(entry.timestamp).toLocaleTimeString()}</span
+                                >
 							</div>
 						{:else}
 							<div
@@ -861,9 +880,9 @@
 										<p class="font-medium leading-relaxed text-gray-100 dark:text-gray-200">
 											{entry.message}
 										</p>
-										<span class="text-xs text-neon-green/80 block mt-2 font-mono"
-											>[AI_RESPONSE] {new Date(entry.timestamp).toLocaleTimeString()}</span
-										>
+										                                        <span class="text-xs text-neon-green/80 block mt-2 font-sans"
+                                            >AI response · {new Date(entry.timestamp).toLocaleTimeString()}</span
+                                        >
 									</div>
 								</div>
 							</div>
@@ -931,8 +950,8 @@
 							aria-label="Chat message input"
 							bind:value={chatMessage}
 							on:keypress={handleKeyPress}
-							placeholder="> Enter your query..."
-							class="w-full px-6 py-4 bg-slate-800/50 dark:bg-matrix-dark/50 border border-neon-blue/30 rounded-2xl shadow-lg text-gray-100 placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-neon-blue focus:border-transparent transition-all duration-300 font-mono backdrop-blur-sm"
+							placeholder="Type your message..."
+							class="w-full px-6 py-4 bg-slate-800/50 dark:bg-matrix-dark/50 border border-neon-blue/30 rounded-2xl shadow-lg text-gray-100 placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-neon-blue focus:border-transparent transition-all duration-300 font-sans backdrop-blur-sm"
 							rows="1"
 						></textarea>
 						<div class="absolute bottom-2 right-2 text-xs text-gray-500 font-mono"></div>
@@ -940,12 +959,12 @@
 					<button
 						on:click={sendChat}
 						disabled={!chatMessage.trim()}
-						class="px-8 py-4 bg-gradient-to-r from-neon-blue to-neon-purple hover:from-neon-purple hover:to-neon-pink disabled:from-gray-600 disabled:to-gray-700 text-white font-bold rounded-2xl shadow-lg transition-all duration-300 transform hover:scale-105 disabled:scale-100 disabled:opacity-50 border-neon-blue/30 font-mono"
+						class="px-8 py-4 bg-gradient-to-r from-neon-blue to-neon-purple hover:from-neon-purple hover:to-neon-pink disabled:from-gray-600 disabled:to-gray-700 text-white font-semibold rounded-2xl shadow-lg transition-all duration-300 transform hover:scale-105 disabled:scale-100 disabled:opacity-50 border-neon-blue/30 font-sans"
 					>
 						{#if isLoading}
-							[SENDING...]
+							Sending…
 						{:else}
-							[TRANSMIT]
+							Send
 						{/if}
 					</button>
 				</div>
@@ -953,7 +972,7 @@
 		</div>
 
 		<!-- Logged Out View: Authentication Form -->
-	{:else}
+{:else}
 		<!-- Auth Landing: two-column layout for clarity -->
 		<div class="relative w-full max-w-6xl grid md:grid-cols-2 gap-10 items-start">
 			<!-- Intro panel -->
@@ -976,8 +995,8 @@
 				<form on:submit={handleAuth} class="space-y-6">
 				<div class="space-y-4">
 					<div>
-						<label for="email" class="block text-sm font-mono font-medium text-white/90 mb-2"
-							>[EMAIL_ADDRESS]</label
+						<label for="email" class="block text-sm font-medium text-white/90 mb-2 font-sans"
+							>Email address</label
 						>
 						<input
 							type="email"
@@ -987,14 +1006,14 @@
 							bind:value={email}
 							required
 							aria-describedby="email-help"
-							class="w-full px-6 py-4 bg-slate-900/60 dark:bg-matrix-dark/60 border border-white/10 rounded-2xl shadow-lg text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-300 focus:border-transparent transition-all duration-300 font-mono backdrop-blur-sm"
+							class="w-full px-6 py-4 bg-slate-900/60 dark:bg-matrix-dark/60 border border-white/10 rounded-2xl shadow-lg text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-300 focus:border-transparent transition-all duration-300 font-sans backdrop-blur-sm"
 							placeholder="user@domain.com"
 						/>
 					</div>
 					
 					<div>
-						<label for="password" class="block text-sm font-mono font-medium text-white/90 mb-2"
-							>[PASSWORD]</label
+						<label for="password" class="block text-sm font-medium text-white/90 mb-2 font-sans"
+							>Password</label
 						>
 						<input
 							type="password"
@@ -1004,7 +1023,7 @@
 							bind:value={password}
 							required
 							aria-describedby="password-help"
-							class="w-full px-6 py-4 bg-slate-900/60 dark:bg-matrix-dark/60 border border-white/10 rounded-2xl shadow-lg text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-fuchsia-300 focus:border-transparent transition-all duration-300 font-mono backdrop-blur-sm"
+							class="w-full px-6 py-4 bg-slate-900/60 dark:bg-matrix-dark/60 border border-white/10 rounded-2xl shadow-lg text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-fuchsia-300 focus:border-transparent transition-all duration-300 font-sans backdrop-blur-sm"
 							placeholder="••••••••"
 						/>
 					</div>
@@ -1013,27 +1032,25 @@
 				<div id="turnstile-widget" class="flex justify-center py-4"></div>
 
 				{#if authError}
-					<div
-						class="p-4 bg-red-500/10 border border-red-500/30 rounded-2xl"
-					>
-						<p class="text-red-400 text-sm font-mono text-center">[AUTH_ERROR] {authError}</p>
+					<div class="p-4 bg-red-500/10 border border-red-500/30 rounded-2xl">
+						<p class="text-red-400 text-sm font-sans text-center">Authentication error: {authError}</p>
 					</div>
 				{/if}
 
 				<button
 					type="submit"
 					disabled={authLoading}
-					class="w-full py-4 px-6 bg-gradient-to-r from-cyan-500 to-fuchsia-500 hover:from-cyan-400 hover:to-fuchsia-400 disabled:from-gray-600 disabled:to-gray-700 text-white font-semibold rounded-2xl shadow-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-0 focus:ring-cyan-300 font-mono"
+					class="w-full py-4 px-6 bg-gradient-to-r from-cyan-500 to-fuchsia-500 hover:from-cyan-400 hover:to-fuchsia-400 disabled:from-gray-600 disabled:to-gray-700 text-white font-semibold rounded-2xl shadow-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-0 focus:ring-cyan-300 font-sans"
 				>
 					{#if authLoading}
 						<div class="flex items-center justify-center space-x-2">
 							<div
 								class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"
 							></div>
-							<span>[AUTHENTICATING...]</span>
+							<span>Authenticating…</span>
 						</div>
 					{:else}
-						[{isLogin ? 'AUTHENTICATE' : 'REGISTER'}]
+						{isLogin ? 'Log in' : 'Create account'}
 					{/if}
 				</button>
 			</form>
@@ -1042,17 +1059,17 @@
 				<div
 					class="w-32 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent mx-auto mb-4"
 				></div>
-				<p class="text-gray-400 text-sm font-mono">
-					{isLogin ? '[NO_ACCOUNT?]' : '[EXISTING_USER?]'}
+				<p class="text-gray-400 text-sm font-sans">
+					{isLogin ? "Don't have an account?" : 'Already have an account?'}
 				</p>
 				<button
 					on:click={() => {
 						isLogin = !isLogin;
 						authError = '';
 					}}
-					class="mt-2 text-cyan-300 hover:text-fuchsia-300 transition-colors duration-300 font-mono font-bold"
+					class="mt-2 text-cyan-300 hover:text-fuchsia-300 transition-colors duration-300 font-sans font-semibold"
 				>
-					[{isLogin ? 'CREATE_ACCOUNT' : 'LOGIN_INSTEAD'}]
+					{isLogin ? 'Create account' : 'Log in instead'}
 				</button>
 			</div>
 			</div>

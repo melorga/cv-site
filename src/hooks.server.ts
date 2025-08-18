@@ -245,11 +245,11 @@ export const handle: Handle = async ({ event, resolve }) => {
 		// Note: 'unsafe-eval' is required for Cloudflare Turnstile to function properly
 		`script-src 'self' https://challenges.cloudflare.com 'wasm-unsafe-eval' 'unsafe-eval' 'nonce-${nonce}'`,
 		// Styles: Allow self and inline (needed for Tailwind/component styles)
-		"style-src 'self' 'unsafe-inline'",
+		"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
 		// Images: Allow HTTPS, data URLs, and self
 		"img-src 'self' data: https:",
-		// Fonts: Allow self and data URLs
-		"font-src 'self' data:",
+		// Fonts: Allow self and data
+		"font-src 'self' data: https://fonts.gstatic.com",
 		// Connections: Restrict to necessary APIs only
 		"connect-src 'self' https://api.groq.com https://challenges.cloudflare.com https://*.firebaseio.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com",
 		// Frames: Only Turnstile
