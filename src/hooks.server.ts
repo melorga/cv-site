@@ -133,12 +133,13 @@ export const handle: Handle = async ({ event, resolve }) => {
 	console.log(`[MIDDLEWARE]   - Method: ${event.request.method}`);
 	console.log(`[MIDDLEWARE]   - Protected routes: ${JSON.stringify(PROTECTED_ROUTES)}`);
 	console.log(`[MIDDLEWARE]   - Is protected: ${isProtectedRoute}`);
-	console.log(`[MIDDLEWARE]   - Is POST: ${event.request.method === 'POST'}`);
+	console.log(`[MIDDLEWARE]   - Method: ${event.request.method}`);
 	console.log(
-		`[MIDDLEWARE]   - Will check CAPTCHA: ${isProtectedRoute && event.request.method === 'POST'}`
+		`[MIDDLEWARE]   - Will check CAPTCHA: ${isProtectedRoute}`
 	);
 
-	if (isProtectedRoute && event.request.method === 'POST') {
+	// Enforce CAPTCHA for all methods on protected routes (not just POST)
+	if (isProtectedRoute) {
 		console.log(`[MIDDLEWARE] 🔒 CAPTCHA verification required for ${event.url.pathname}`);
 
 		if (!isCaptchaValid(event.cookies)) {
@@ -163,8 +164,38 @@ export const handle: Handle = async ({ event, resolve }) => {
 		);
 	} else {
 		console.log(
-			`[MIDDLEWARE] ⚪ No CAPTCHA check needed for ${event.url.pathname} (not protected or not POST)`
+			`[MIDDLEWARE] ⚪ No CAPTCHA check needed for ${event.url.pathname} (not a protected route)`
 		);
+	}
+
+	// Gentle enforcement for homepage GET '/': clear stale cookies and set no-store to avoid caching issues.
+	// We do not hard-block the homepage, but we make sure stale verification does not linger.
+	try {
+		if (event.url.pathname === '/' && event.request.method === 'GET') {
+			const hasVerified = !!event.cookies.get('captcha_verified');
+			const hasExpires = !!event.cookies.get('captcha_expires');
+			const valid = isCaptchaValid(event.cookies);
+			if ((hasVerified || hasExpires) && !valid) {
+				console.log('[MIDDLEWARE] 🧹 Clearing stale CAPTCHA cookies for homepage');
+				// Clear potentially stale cookies
+				event.cookies.set('captcha_verified', '', {
+					path: '/',
+					maxAge: 0,
+					httpOnly: false,
+					sameSite: 'strict',
+					secure: event.url.protocol === 'https:'
+				});
+				event.cookies.set('captcha_expires', '', {
+					path: '/',
+					maxAge: 0,
+					httpOnly: false,
+					sameSite: 'strict',
+					secure: event.url.protocol === 'https:'
+				});
+			}
+		}
+	} catch (e) {
+		console.log('[MIDDLEWARE] ⚠️ Error during homepage gentle enforcement:', e);
 	}
 
 	// Resolve the request with transformPageChunk to inject nonce
@@ -186,6 +217,12 @@ export const handle: Handle = async ({ event, resolve }) => {
 	response.headers.set('X-Frame-Options', 'DENY');
 	response.headers.set('X-XSS-Protection', '1; mode=block');
 	response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+	// Avoid caching the homepage to reduce stale Turnstile/session issues
+	if (event.url.pathname === '/' && event.request.method === 'GET') {
+		response.headers.set('Cache-Control', 'no-store, max-age=0');
+		response.headers.set('Pragma', 'no-cache');
+		response.headers.set('Expires', '0');
+	}
 	// Updated Permissions-Policy for July 2025 standards - focus on current features only
 	response.headers.set(
 		'Permissions-Policy',
