@@ -27,7 +27,7 @@
 	let turnstileToken = '';
 	let chatError = '';
 	let isLoading = false;
-	// let turnstileLoaded = false; // Reserved for future Turnstile state tracking
+	let turnstileLoaded = false; // Reserved for future Turnstile state tracking
 
 	// UI state
 	let isDarkMode = false;
@@ -794,7 +794,7 @@
 									stroke-linecap="round"
 									stroke-linejoin="round"
 									stroke-width="2"
-									d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+									d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2zM8 15H5v-2h3v2zm0-4H5V9h3v2zm7 4h-3v-2h3v2zm0-4h-3V9h3v2z"
 								/>
 								<circle cx="12" cy="9" r="1" fill="currentColor" />
 								<circle cx="8" cy="9" r="1" fill="currentColor" />
