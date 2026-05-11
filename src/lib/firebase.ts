@@ -72,3 +72,36 @@ export function getFirebaseAuth() {
 	if (!auth) throw new Error('Firebase not initialized');
 	return auth;
 }
+
+/**
+ * Sign in (or register) the user with email+password, then exchange the
+ * Firebase ID token for an httpOnly session cookie via /api/auth/session.
+ *
+ * The /api/auth/session endpoint is added in Layer 4 — until then, the
+ * server call returns 404 and the front-end falls back to the legacy flow.
+ */
+export async function signIn(
+	email: string,
+	password: string,
+	mode: 'login' | 'register'
+): Promise<void> {
+	const { signInWithEmailAndPassword, createUserWithEmailAndPassword } =
+		await import('firebase/auth');
+	await initFirebase();
+	const a = getFirebaseAuth();
+
+	const credential =
+		mode === 'login'
+			? await signInWithEmailAndPassword(a, email, password)
+			: await createUserWithEmailAndPassword(a, email, password);
+
+	const idToken = await credential.user.getIdToken();
+	const res = await fetch('/api/auth/session', {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ idToken })
+	});
+	if (!res.ok && res.status !== 404) {
+		throw new Error('session-exchange-failed');
+	}
+}
