@@ -51,7 +51,7 @@
 	},
 	"dependencies": {
 		"firebase": "^12.13.0",
-		"groq-sdk": "^0.29.0",
+		"groq-sdk": "^1.1.2",
 		"node-fetch": "^3.3.2",
 		"rate-limiter-flexible": "^11.1.0"
 	}
