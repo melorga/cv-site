@@ -79,7 +79,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 	// Make nonce available to the app
 	event.locals.nonce = nonce;
 
-	// Rate limiting
+	// Rate limiting (per-session in-memory)
 	try {
 		await limiter.consume(
 			event.request.headers.get('cf-connecting-ip') || event.getClientAddress() || 'anon',
@@ -87,6 +87,26 @@ export const handle: Handle = async ({ event, resolve }) => {
 		);
 	} catch {
 		return new Response('Rate limited', { status: 429 });
+	}
+
+	// Per-IP daily cap for /api/chat
+	if (event.url.pathname.startsWith('/api/chat')) {
+		const kv = event.platform?.env?.VISITOR_LOG;
+		if (kv) {
+			const { perIpDailyChatCap } = await import('$lib/server/rate-limit');
+			const ipKey =
+				event.request.headers.get('cf-connecting-ip') || event.getClientAddress() || 'anon';
+			const allowed = await perIpDailyChatCap(kv, ipKey);
+			if (!allowed) {
+				return new Response(
+					JSON.stringify({
+						error: 'daily-cap-reached',
+						message: 'Daily request limit reached. Try again tomorrow.'
+					}),
+					{ status: 429, headers: { 'Content-Type': 'application/json' } }
+				);
+			}
+		}
 	}
 
 	// CAPTCHA verification middleware for protected routes
@@ -191,17 +211,21 @@ export const handle: Handle = async ({ event, resolve }) => {
 		'camera=(), microphone=(), geolocation=(), payment=(), usb=()'
 	);
 
+	// Cross-origin isolation headers
+	response.headers.set('Cross-Origin-Opener-Policy', 'same-origin');
+	response.headers.set('Cross-Origin-Embedder-Policy', 'credentialless');
+	response.headers.set('Cross-Origin-Resource-Policy', 'same-origin');
+
 	// Robots header to allow indexing of HTML pages
 	if (response.headers.get('Content-Type')?.includes('text/html')) {
 		response.headers.set('X-Robots-Tag', 'all');
 	}
 
-	// HSTS - Force HTTPS connections for enhanced security
-	// Only apply in production to avoid local development issues
+	// HSTS preload-ready (2 years). Only in production to avoid local dev issues.
 	if (event.url.hostname !== 'localhost' && event.url.protocol === 'https:') {
 		response.headers.set(
 			'Strict-Transport-Security',
-			'max-age=31536000; includeSubDomains; preload'
+			'max-age=63072000; includeSubDomains; preload'
 		);
 	}
 
@@ -214,6 +238,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 	const scriptSrc = [
 		"'self'",
 		'https://challenges.cloudflare.com',
+		'https://assets.calendly.com',
 		"'nonce-" + nonce + "'",
 		"'strict-dynamic'",
 		...(allowEval ? ["'wasm-unsafe-eval'", "'unsafe-eval'"] : [])
@@ -224,15 +249,15 @@ export const handle: Handle = async ({ event, resolve }) => {
 		// Scripts: Restrict to trusted sources only - use nonce and strict-dynamic; optionally allow eval via env
 		`script-src ${scriptSrc}`,
 		// Styles: Allow self and inline (needed for Tailwind/component styles)
-		"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+		"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://assets.calendly.com",
 		// Images: Allow HTTPS, data URLs, and self
 		"img-src 'self' data: https:",
 		// Fonts: Allow self and data
 		"font-src 'self' data: https://fonts.gstatic.com",
-		// Connections: Restrict to necessary APIs only
-		"connect-src 'self' https://api.groq.com https://challenges.cloudflare.com https://*.firebaseio.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com",
-		// Frames: Only Turnstile
-		'frame-src https://challenges.cloudflare.com',
+		// Connections: Firebase auth, Groq, Turnstile, Calendly, Google tokeninfo (server-side)
+		"connect-src 'self' https://api.groq.com https://challenges.cloudflare.com https://*.firebaseio.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://calendly.com https://www.googleapis.com",
+		// Frames: Turnstile + Calendly
+		'frame-src https://challenges.cloudflare.com https://calendly.com',
 		// Workers: Allow self for SvelteKit service workers
 		"worker-src 'self'",
 		// Manifests: Allow self for PWA manifest

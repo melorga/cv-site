@@ -127,6 +127,47 @@ class SecurityTester {
 			} else {
 				this.log('WARN', 'Content Security Policy not set');
 			}
+
+			// Layer 4 additions: COOP/COEP/CORP isolation headers
+			const coop = headers.get('cross-origin-opener-policy');
+			this.log(
+				coop === 'same-origin' ? 'PASS' : 'WARN',
+				`Cross-Origin-Opener-Policy: ${coop ?? '(none)'}`
+			);
+
+			const coep = headers.get('cross-origin-embedder-policy');
+			this.log(
+				coep === 'credentialless' || coep === 'require-corp' ? 'PASS' : 'WARN',
+				`Cross-Origin-Embedder-Policy: ${coep ?? '(none)'}`
+			);
+
+			const corp = headers.get('cross-origin-resource-policy');
+			this.log(
+				corp === 'same-origin' ? 'PASS' : 'WARN',
+				`Cross-Origin-Resource-Policy: ${corp ?? '(none)'}`
+			);
+
+			// HSTS (only meaningful on HTTPS — localhost is exempt)
+			const isLocal = new URL(BASE_URL).hostname === 'localhost';
+			const hsts = headers.get('strict-transport-security');
+			if (isLocal && !hsts) {
+				this.log('WARN', 'HSTS not set (localhost — expected; will be set in prod)');
+			} else if (hsts && /max-age=\d+/.test(hsts) && hsts.includes('preload')) {
+				this.log('PASS', `HSTS preload-ready: ${hsts}`);
+			} else {
+				this.log('FAIL', `HSTS missing or incomplete: ${hsts ?? '(none)'}`);
+			}
+
+			// Calendly CSP entries (Layer 4)
+			const cspStr = csp ?? '';
+			this.log(
+				cspStr.includes('https://assets.calendly.com') ? 'PASS' : 'WARN',
+				'CSP script-src includes Calendly'
+			);
+			this.log(
+				cspStr.includes('frame-src') && cspStr.includes('https://calendly.com') ? 'PASS' : 'WARN',
+				'CSP frame-src includes Calendly'
+			);
 		});
 	}
 
