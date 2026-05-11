@@ -1,18 +1,25 @@
 // See https://svelte.dev/docs/kit/types#app.d.ts
-// for information about these interfaces
+import type { User } from '$lib/types';
+
 declare global {
 	namespace App {
-		// interface Error {}
 		interface Locals {
 			nonce: string;
+			user: User | null;
 		}
-		// interface PageData {}
-		// interface PageState {}
+		interface PageData {
+			user: User | null;
+		}
 		interface Platform {
 			env: {
 				GROQ_API_KEY: string;
 				TURNSTILE_SECRET: string;
 				PROFILE_VECTORS: KVNamespace;
+				VISITOR_LOG?: KVNamespace;
+				VISITOR_LOG_SALT?: string;
+				SESSION_SECRET?: string;
+				ALLOW_EVAL?: string;
+				E2E_MODE?: string;
 			};
 		}
 	}
