@@ -7,7 +7,7 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 			return json({ error: 'Turnstile not configured' }, { status: 500 });
 		}
 
-		const body = await request.json();
+		const body = (await request.json()) as { token?: unknown };
 		const { token } = body;
 
 		if (!token || typeof token !== 'string') {
@@ -37,7 +37,7 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 			throw new Error(`Turnstile API returned ${res.status}`);
 		}
 
-		const outcome = await res.json();
+		const outcome = (await res.json()) as { success?: boolean };
 
 		if (outcome.success) {
 			return json({ valid: true });

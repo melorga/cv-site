@@ -21,6 +21,9 @@ importers:
         specifier: ^11.1.0
         version: 11.1.0
     devDependencies:
+      '@cloudflare/workers-types':
+        specifier: ^4.20260510.1
+        version: 4.20260510.1
       '@eslint/compat':
         specifier: ^2.1.0
         version: 2.1.0(eslint@10.3.0(jiti@2.7.0))

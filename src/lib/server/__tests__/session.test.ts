@@ -29,8 +29,6 @@ describe('session', () => {
 
 	it('rejects a different secret', async () => {
 		const cookie = await issueSessionCookie({ uid: 'u-1', email: 'a@b.c' }, SECRET, 3600);
-		expect(
-			await verifySessionCookie(cookie, 'different-secret-of-equal-length-x')
-		).toBeNull();
+		expect(await verifySessionCookie(cookie, 'different-secret-of-equal-length-x')).toBeNull();
 	});
 });

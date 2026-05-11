@@ -13,7 +13,8 @@ const MIN_INPUT_LEN = 1;
 const INPUT_REJECT_PATTERNS: { name: string; pattern: RegExp }[] = [
 	{
 		name: 'role-switch.ignore-instructions',
-		pattern: /\bignore\s+(all\s+)?(previous|prior|preceding|above)\s+(instructions|prompts?|messages?)\b/i
+		pattern:
+			/\bignore\s+(all\s+)?(previous|prior|preceding|above)\s+(instructions|prompts?|messages?)\b/i
 	},
 	{ name: 'role-switch.you-are-now', pattern: /\byou\s+are\s+now\b/i },
 	{ name: 'role-switch.system-tag', pattern: /\b(system|assistant)\s*:\s*you\s+are\b/i },
@@ -36,7 +37,8 @@ const INPUT_REJECT_PATTERNS: { name: string; pattern: RegExp }[] = [
 const OUTPUT_REJECT_PATTERNS: { name: string; pattern: RegExp }[] = [
 	{
 		name: 'fabricated-credential.phd',
-		pattern: /\b(holds?|have|has|earned|received)\s+(an?\s+)?(ph\.?d|doctorate|m\.?b\.?a|j\.?d|m\.?d)\b/i
+		pattern:
+			/\b(holds?|have|has|earned|received)\s+(an?\s+)?(ph\.?d|doctorate|m\.?b\.?a|j\.?d|m\.?d)\b/i
 	},
 	{ name: 'fabricated-credential.degree-from', pattern: /\bph\.?d\s+(from|in)\b/i },
 	{

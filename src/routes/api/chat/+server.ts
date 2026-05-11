@@ -1,6 +1,7 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import Groq from 'groq-sdk';
+import { checkInput, filterOutput, HARDENED_SYSTEM_PROMPT } from '$lib/server/chat-guard';
 
 // Utility function for vector similarity (reserved for future use)
 // function cosineSimilarity(a: number[], b: number[]): number {
@@ -52,19 +53,11 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 			return json({ error: 'Message too long (max 1000 characters)' }, { status: 400 });
 		}
 
-		// Basic content filtering
-		const suspiciousPatterns = [
-			/\b(exec|eval|system|shell|cmd)\s*\(/i,
-			/<script[^>]*>.*<\/script>/i,
-			/javascript:/i,
-			/(union|select|insert|update|delete|drop)\s+/i
-		];
-
-		if (suspiciousPatterns.some((pattern) => pattern.test(message))) {
-			console.log(
-				`[SECURITY] Suspicious content detected from IP: ${clientIP} - Message: ${message.substring(0, 100)}...`
-			);
-			return json({ error: 'Invalid message content' }, { status: 400 });
+		// Prompt-injection / content guard (replaces the legacy 4-regex filter)
+		const inputCheck = checkInput(message);
+		if (!inputCheck.ok) {
+			console.log(`[GUARD] input rejected from IP: ${clientIP} rule: ${inputCheck.rule}`);
+			return json({ error: 'Invalid message content', rule: inputCheck.rule }, { status: 400 });
 		}
 
 		console.log(`[SECURITY] Message validation passed for IP: ${clientIP}`);
@@ -173,13 +166,7 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 		// Build context from retrieved chunks
 		const context = contextChunks.join('\n\n');
 
-		const systemPrompt = `You are an AI assistant representing Mariano Elorga, an AWS Solutions Architect. 
-Use the following information about his professional background to answer questions accurately and professionally.
-
-PROFESSIONAL INFORMATION:
-${context}
-
-Respond as if you are representing Mariano's professional profile to potential employers or recruiters. Be helpful, accurate, and professional. If asked about something not covered in the provided information, acknowledge that politely and offer to clarify what information is available. It is important to concise, sometimes less is more, so avoid big chunks of text.`;
+		const systemPrompt = HARDENED_SYSTEM_PROMPT.replace('{context}', context);
 
 		console.log('Sending request to Groq API');
 
@@ -202,12 +189,22 @@ Respond as if you are representing Mariano's professional profile to potential e
 
 		console.log('Groq API response received');
 
-		const response =
+		const raw =
 			completion.choices[0]?.message?.content ||
 			"I apologize, but I couldn't generate a response at this time.";
 
+		const filtered = filterOutput(raw);
+		if (!filtered.ok) {
+			console.log(`[GUARD] output blocked rule: ${filtered.rule}`);
+			return json({
+				response: "I can't answer that — let me know if you'd like to ask something else.",
+				contextUsed: contextChunks.length > 0,
+				filtered: true
+			});
+		}
+
 		return json({
-			response: response,
+			response: filtered.text,
 			contextUsed: contextChunks.length > 0
 		});
 	} catch (error) {

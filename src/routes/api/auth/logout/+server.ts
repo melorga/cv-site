@@ -1,7 +1,14 @@
 import type { RequestHandler } from '@sveltejs/kit';
 
 export const POST: RequestHandler = async ({ cookies, url }) => {
-	// Clear the httpOnly captcha session cookie
+	// Clear both session cookies
+	cookies.set('firebase_session', '', {
+		path: '/',
+		maxAge: 0,
+		httpOnly: true,
+		secure: true,
+		sameSite: 'strict'
+	});
 	cookies.set('captcha_session', '', {
 		path: '/',
 		maxAge: 0,

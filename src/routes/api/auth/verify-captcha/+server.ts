@@ -40,7 +40,7 @@ export const POST: RequestHandler = async ({ request, platform, cookies }) => {
 		}
 
 		// Parse request body
-		const body = await request.json();
+		const body = (await request.json()) as { token?: unknown };
 		const { token } = body;
 
 		if (!token || typeof token !== 'string') {
@@ -80,7 +80,14 @@ export const POST: RequestHandler = async ({ request, platform, cookies }) => {
 			return json({ error: 'CAPTCHA verification service error' }, { status: 502 });
 		}
 
-		const result = await turnstileResponse.json();
+		const result = (await turnstileResponse.json()) as {
+			success?: boolean;
+			challenge_ts?: string;
+			hostname?: string;
+			action?: string;
+			cdata?: string;
+			'error-codes'?: string[];
+		};
 		console.log('[CAPTCHA] Turnstile response:', {
 			success: result.success,
 			challenge_ts: result.challenge_ts,

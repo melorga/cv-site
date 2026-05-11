@@ -21,6 +21,7 @@
 		"deploy:check": "echo '🔍 Running validation...' && pnpm run validate && echo '🏗️ Running build...' && pnpm run build && echo '🔒 Starting server and running security tests...' && pnpm run test:with-server && echo '✅ All checks passed!'"
 	},
 	"devDependencies": {
+		"@cloudflare/workers-types": "^4.20260510.1",
 		"@eslint/compat": "^2.1.0",
 		"@eslint/js": "^10.0.1",
 		"@sveltejs/adapter-auto": "^7.0.1",
