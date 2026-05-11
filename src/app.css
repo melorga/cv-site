@@ -106,26 +106,3 @@
 		transform: translate(-12px, 8px) scale(1.05);
 	}
 }
-
-/* --------------------------------------------------------------
- * Legacy class shims — TEMPORARY (removed in Layer 3)
- * Keeps the unstyled +page.svelte from looking catastrophic.
- * ------------------------------------------------------------ */
-.glass,
-.glass-dark {
-	background-color: var(--color-canvas-elevated);
-	border: 1px solid var(--color-line);
-}
-
-.neon-text {
-	color: var(--color-accent);
-	text-shadow: none;
-}
-
-.neural-bg {
-	background-color: var(--color-canvas);
-}
-
-.high-contrast {
-	/* No-op — palette meets AA already. Removed in Layer 3. */
-}
