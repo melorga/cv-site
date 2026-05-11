@@ -32,7 +32,7 @@ export async function initFirebase() {
 				console.log('🔥 Firebase configuration loaded');
 			} catch (parseError) {
 				console.error('❌ Failed to parse VITE_FIREBASE_CONFIG:', parseError);
-				throw new Error('Invalid Firebase configuration format');
+				throw new Error('Invalid Firebase configuration format', { cause: parseError });
 			}
 		} else {
 			// Always require proper Firebase configuration

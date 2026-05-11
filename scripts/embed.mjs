@@ -18,7 +18,7 @@ async function fetchWithRetry(url, options, retries = RETRIES) {
 			try {
 				data = JSON.parse(text);
 			} catch (e) {
-				throw new Error(`JSON parse failed: ${e.message}`);
+				throw new Error(`JSON parse failed: ${e.message}`, { cause: e });
 			}
 			console.log(`Success on attempt ${attempt}: ${JSON.stringify(data)}`);
 			return data;
