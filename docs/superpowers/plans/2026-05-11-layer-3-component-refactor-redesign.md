@@ -1242,9 +1242,8 @@ export async function signIn(
 	mode: 'login' | 'register',
 	turnstileToken: string
 ): Promise<void> {
-	const { signInWithEmailAndPassword, createUserWithEmailAndPassword } = await import(
-		'firebase/auth'
-	);
+	const { signInWithEmailAndPassword, createUserWithEmailAndPassword } =
+		await import('firebase/auth');
 	initFirebase();
 	const auth = getFirebaseAuth();
 	if (!auth) throw new Error('auth-unavailable');
