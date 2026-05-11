@@ -13,16 +13,19 @@
 ## File Structure
 
 **Modified:**
+
 - `package.json` — replace `tailwindcss` with `tailwindcss@^4` and `@tailwindcss/vite`; remove `@tailwindcss/cli` (replaced by Vite plugin); bump forms/typography plugins.
 - `vite.config.ts` — add the new Tailwind Vite plugin.
 - `postcss.config.js` — remove the `tailwindcss` and `autoprefixer` plugin entries (Tailwind 4 handles autoprefixing internally). If the file becomes empty, delete it.
 - `src/app.css` — completely rewritten with the new `@theme` syntax and Warm Orange palette.
 
 **Deleted:**
+
 - `tailwind.config.js` — Tailwind 4 reads config from CSS.
 - `postcss.config.js` — only if it becomes empty after the Tailwind/autoprefixer entries are removed.
 
 **Untouched in this layer (Layer 3 handles them):**
+
 - `src/routes/+page.svelte` — its old utility classes (like `bg-neon-blue`) will visually break after this layer. That's expected. Layer 3 replaces the file entirely.
 
 ---
@@ -30,6 +33,7 @@
 ## Task 1: Baseline check
 
 **Files:**
+
 - None modified.
 
 - [ ] **Step 1: Confirm Layer 1 is complete**
@@ -61,6 +65,7 @@ Expected: green.
 ## Task 2: Install Tailwind 4 packages
 
 **Files:**
+
 - Modify: `package.json` (devDependencies)
 
 - [ ] **Step 1: Remove old Tailwind packages**
@@ -82,6 +87,7 @@ cat package.json | grep -E '"tailwind|"@tailwindcss'
 ```
 
 Expected output includes:
+
 ```
 "@tailwindcss/forms": "^0.5.11",
 "@tailwindcss/typography": "^0.5.19",
@@ -103,6 +109,7 @@ git commit -m "chore(tailwind): install tailwind 4 and @tailwindcss/vite"
 ## Task 3: Register the Tailwind Vite plugin
 
 **Files:**
+
 - Modify: `vite.config.ts`
 
 - [ ] **Step 1: Read current vite.config.ts**
@@ -124,10 +131,7 @@ import tailwindcss from '@tailwindcss/vite';
 Inside the `plugins: [ … ]` array of the `defineConfig({ … })`, add `tailwindcss()` **before** `sveltekit()`. The result should look like:
 
 ```ts
-plugins: [
-  tailwindcss(),
-  sveltekit()
-]
+plugins: [tailwindcss(), sveltekit()];
 ```
 
 If the existing config uses a function form (`plugins: [tailwindcss(), sveltekit()]` as a one-liner), the addition is identical.
@@ -153,6 +157,7 @@ Expected: green.
 ## Task 4: Strip PostCSS Tailwind/autoprefixer plugins
 
 **Files:**
+
 - Modify or delete: `postcss.config.js`
 - Modify: `package.json` — autoprefixer may now be unused.
 
@@ -204,6 +209,7 @@ git commit -m "chore(tailwind): wire @tailwindcss/vite plugin and drop postcss t
 ## Task 5: Delete the old `tailwind.config.js`
 
 **Files:**
+
 - Delete: `tailwind.config.js`
 
 The file's content moves to CSS in Task 6 — but first we delete it to ensure the new build path is the only source.
@@ -235,6 +241,7 @@ Expected: builds. Tailwind utilities won't be generated yet (app.css still has t
 ## Task 6: Rewrite `src/app.css` with Tailwind 4 syntax + new palette
 
 **Files:**
+
 - Modify: `src/app.css` — complete rewrite.
 
 This is the heart of Layer 2. Everything else flows from this file.
@@ -252,7 +259,7 @@ Note the legacy keyframes (`float`, `glow`, `matrix-rain`) and utility classes (
 Overwrite `src/app.css` with exactly this content:
 
 ```css
-@import "tailwindcss";
+@import 'tailwindcss';
 @plugin "@tailwindcss/forms";
 @plugin "@tailwindcss/typography";
 
@@ -262,37 +269,37 @@ Overwrite `src/app.css` with exactly this content:
  * `text-accent`, `border-line`, etc.
  * ------------------------------------------------------------ */
 @theme {
-  /* Canvas + foreground */
-  --color-canvas: #111111;          /* near-black main bg */
-  --color-canvas-elevated: #1a1a1a; /* card/input bg */
-  --color-canvas-deep: #0a0a0a;     /* sidebar bg */
-  --color-fg: #f5f5f4;              /* primary text */
-  --color-fg-muted: #a8a29e;        /* secondary text */
-  --color-fg-subtle: #6b7280;       /* tertiary text */
-  --color-line: #2a2a2a;            /* borders */
-  --color-line-strong: #3a3a3a;     /* focused/hovered borders */
+	/* Canvas + foreground */
+	--color-canvas: #111111; /* near-black main bg */
+	--color-canvas-elevated: #1a1a1a; /* card/input bg */
+	--color-canvas-deep: #0a0a0a; /* sidebar bg */
+	--color-fg: #f5f5f4; /* primary text */
+	--color-fg-muted: #a8a29e; /* secondary text */
+	--color-fg-subtle: #6b7280; /* tertiary text */
+	--color-line: #2a2a2a; /* borders */
+	--color-line-strong: #3a3a3a; /* focused/hovered borders */
 
-  /* Accent: Warm Orange */
-  --color-accent: #ff8a4c;
-  --color-accent-hover: #ff7a36;
-  --color-accent-soft: rgb(255 138 76 / 0.16); /* glow tint */
-  --color-on-accent: #111111;       /* text color on accent buttons */
+	/* Accent: Warm Orange */
+	--color-accent: #ff8a4c;
+	--color-accent-hover: #ff7a36;
+	--color-accent-soft: rgb(255 138 76 / 0.16); /* glow tint */
+	--color-on-accent: #111111; /* text color on accent buttons */
 
-  /* Typography */
-  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-mono: "JetBrains Mono", "Fira Code", Consolas, monospace;
+	/* Typography */
+	--font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+	--font-mono: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
 
-  /* Spacing scale (Tailwind defaults are kept; we only add semantic aliases) */
-  --spacing-section: 4rem;
+	/* Spacing scale (Tailwind defaults are kept; we only add semantic aliases) */
+	--spacing-section: 4rem;
 
-  /* Radii */
-  --radius-pill: 9999px;
+	/* Radii */
+	--radius-pill: 9999px;
 
-  /* Motion */
-  --ease-out-soft: cubic-bezier(0.16, 1, 0.3, 1);
-  --duration-fast: 150ms;
-  --duration-normal: 250ms;
-  --duration-slow: 400ms;
+	/* Motion */
+	--ease-out-soft: cubic-bezier(0.16, 1, 0.3, 1);
+	--duration-fast: 150ms;
+	--duration-normal: 250ms;
+	--duration-slow: 400ms;
 }
 
 /* --------------------------------------------------------------
@@ -300,85 +307,96 @@ Overwrite `src/app.css` with exactly this content:
  * Default colors apply to <html> so theme is global.
  * ------------------------------------------------------------ */
 @layer base {
-  html {
-    background-color: var(--color-canvas);
-    color: var(--color-fg);
-    font-family: var(--font-sans);
-    -webkit-font-smoothing: antialiased;
-    text-rendering: optimizeLegibility;
-  }
+	html {
+		background-color: var(--color-canvas);
+		color: var(--color-fg);
+		font-family: var(--font-sans);
+		-webkit-font-smoothing: antialiased;
+		text-rendering: optimizeLegibility;
+	}
 
-  body {
-    min-height: 100vh;
-    background-color: var(--color-canvas);
-    color: var(--color-fg);
-  }
+	body {
+		min-height: 100vh;
+		background-color: var(--color-canvas);
+		color: var(--color-fg);
+	}
 
-  /* Default focus ring uses the accent */
-  :focus-visible {
-    outline: 2px solid var(--color-accent);
-    outline-offset: 2px;
-    border-radius: 2px;
-  }
+	/* Default focus ring uses the accent */
+	:focus-visible {
+		outline: 2px solid var(--color-accent);
+		outline-offset: 2px;
+		border-radius: 2px;
+	}
 
-  /* Selection styles */
-  ::selection {
-    background-color: var(--color-accent);
-    color: var(--color-on-accent);
-  }
+	/* Selection styles */
+	::selection {
+		background-color: var(--color-accent);
+		color: var(--color-on-accent);
+	}
 }
 
 /* --------------------------------------------------------------
  * Custom utilities (replaces the legacy @apply / arbitrary CSS)
  * ------------------------------------------------------------ */
 @utility hero-glow {
-  /* Subtle radial accent behind hero sections */
-  background-image: radial-gradient(
-    ellipse at top right,
-    var(--color-accent-soft),
-    transparent 60%
-  );
+	/* Subtle radial accent behind hero sections */
+	background-image: radial-gradient(
+		ellipse at top right,
+		var(--color-accent-soft),
+		transparent 60%
+	);
 }
 
 @utility scrollbar-thin {
-  /* Restrained custom scrollbar for chat list, sidebar */
-  scrollbar-width: thin;
-  scrollbar-color: var(--color-line-strong) transparent;
+	/* Restrained custom scrollbar for chat list, sidebar */
+	scrollbar-width: thin;
+	scrollbar-color: var(--color-line-strong) transparent;
 }
 
 @utility scrollbar-thin::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+	width: 6px;
+	height: 6px;
 }
 
 @utility scrollbar-thin::-webkit-scrollbar-thumb {
-  background-color: var(--color-line-strong);
-  border-radius: 3px;
+	background-color: var(--color-line-strong);
+	border-radius: 3px;
 }
 
 @utility scrollbar-thin::-webkit-scrollbar-track {
-  background: transparent;
+	background: transparent;
 }
 
 /* --------------------------------------------------------------
  * Motion keyframes (Layer-3 components reference these)
  * ------------------------------------------------------------ */
 @keyframes fade-in {
-  from { opacity: 0; transform: translateY(4px); }
-  to   { opacity: 1; transform: translateY(0); }
+	from {
+		opacity: 0;
+		transform: translateY(4px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
 }
 
 @keyframes accent-drift {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  50%      { transform: translate(-12px, 8px) scale(1.05); }
+	0%,
+	100% {
+		transform: translate(0, 0) scale(1);
+	}
+	50% {
+		transform: translate(-12px, 8px) scale(1.05);
+	}
 }
 
 @utility animate-fade-in {
-  animation: fade-in var(--duration-normal) var(--ease-out-soft) both;
+	animation: fade-in var(--duration-normal) var(--ease-out-soft) both;
 }
 
 @utility animate-accent-drift {
-  animation: accent-drift 8s var(--ease-out-soft) infinite;
+	animation: accent-drift 8s var(--ease-out-soft) infinite;
 }
 ```
 
@@ -424,6 +442,7 @@ git commit -m "feat(tailwind): migrate to v4 with @theme; replace cyberpunk pale
 ## Task 7: Add legacy-class deprecation notes (defensive)
 
 **Files:**
+
 - Modify: `src/app.css` — add a `@supports`-gated fallback so the visually-broken Layer-2 intermediate state doesn't look catastrophic if someone deploys mid-migration.
 
 This step is optional but recommended.
@@ -442,21 +461,21 @@ Add to the bottom of `src/app.css`:
  * ------------------------------------------------------------ */
 .glass,
 .glass-dark {
-  background-color: var(--color-canvas-elevated);
-  border: 1px solid var(--color-line);
+	background-color: var(--color-canvas-elevated);
+	border: 1px solid var(--color-line);
 }
 
 .neon-text {
-  color: var(--color-accent);
-  text-shadow: none;
+	color: var(--color-accent);
+	text-shadow: none;
 }
 
 .neural-bg {
-  background-color: var(--color-canvas);
+	background-color: var(--color-canvas);
 }
 
 .high-contrast {
-  /* No-op — new palette already meets AA. Removed in Layer 3. */
+	/* No-op — new palette already meets AA. Removed in Layer 3. */
 }
 ```
 
@@ -480,6 +499,7 @@ git commit -m "feat(tailwind): temporary shims for legacy classes (removed in La
 ## Task 8: Verify build output uses new tokens
 
 **Files:**
+
 - None modified (verification).
 
 - [ ] **Step 1: Inspect built CSS**
@@ -518,6 +538,7 @@ Expected: zero matches (in `src/`). The shim file references `.neural-bg` as a c
 ## Task 9: Full pipeline check + commit milestone
 
 **Files:**
+
 - None modified.
 
 - [ ] **Step 1: Full pipeline**

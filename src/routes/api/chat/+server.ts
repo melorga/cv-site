@@ -101,11 +101,15 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 		const allKeys: { name: string }[] = [];
 
 		while (true) {
-			const page = await kv.list({ cursor });
+			const page = (await kv.list({ cursor })) as {
+				keys: { name: string }[];
+				cursor?: string;
+				list_complete?: boolean;
+			};
 			allKeys.push(...page.keys);
 			totalKeysFetched += page.keys.length;
-			cursor = (page as any).cursor as string | undefined;
-			if ((page as any).list_complete || !cursor || totalKeysFetched >= maxKeysToFetch) break;
+			cursor = page.cursor;
+			if (page.list_complete || !cursor || totalKeysFetched >= maxKeysToFetch) break;
 		}
 
 		console.log('Total KV keys discovered:', allKeys.length);
@@ -145,7 +149,9 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 
 		// If grouping failed or too few, fallback to global selection
 		if (selectedKeys.length === 0) {
-			selectedKeys.push(...allKeys.map((k) => k.name).slice(0, Math.min(allKeys.length, maxTotalChunks)));
+			selectedKeys.push(
+				...allKeys.map((k) => k.name).slice(0, Math.min(allKeys.length, maxTotalChunks))
+			);
 		}
 
 		const contextChunks: string[] = [];
@@ -157,7 +163,7 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 				if (data?.content && typeof data.content === 'string') {
 					contextChunks.push(data.content);
 				}
-			} catch (e) {
+			} catch {
 				console.warn('Failed to parse stored data for key:', keyName);
 			}
 		}

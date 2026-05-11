@@ -27,7 +27,7 @@
 	let turnstileToken = '';
 	let chatError = '';
 	let isLoading = false;
-	let turnstileLoaded = false; // Reserved for future Turnstile state tracking
+	// (legacy: turnstileLoaded state removed — replaced by Layer 3 rewrite)
 
 	// UI state
 	let isDarkMode = false;
