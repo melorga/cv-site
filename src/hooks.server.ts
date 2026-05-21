@@ -211,9 +211,12 @@ export const handle: Handle = async ({ event, resolve }) => {
 		'camera=(), microphone=(), geolocation=(), payment=(), usb=()'
 	);
 
-	// Cross-origin isolation headers
+	// Cross-origin isolation headers.
+	// COEP is intentionally NOT set: it would block the Calendly iframe
+	// (calendly.com doesn't ship CORP). COOP is kept so window.opener
+	// relationships remain same-origin. CORP is kept to prevent our own
+	// resources being embedded cross-origin.
 	response.headers.set('Cross-Origin-Opener-Policy', 'same-origin');
-	response.headers.set('Cross-Origin-Embedder-Policy', 'credentialless');
 	response.headers.set('Cross-Origin-Resource-Policy', 'same-origin');
 
 	// Robots header to allow indexing of HTML pages

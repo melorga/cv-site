@@ -128,17 +128,12 @@ class SecurityTester {
 				this.log('WARN', 'Content Security Policy not set');
 			}
 
-			// Layer 4 additions: COOP/COEP/CORP isolation headers
+			// Cross-origin isolation headers. COEP is intentionally absent —
+			// it would block the Calendly iframe (which doesn't ship CORP).
 			const coop = headers.get('cross-origin-opener-policy');
 			this.log(
 				coop === 'same-origin' ? 'PASS' : 'WARN',
 				`Cross-Origin-Opener-Policy: ${coop ?? '(none)'}`
-			);
-
-			const coep = headers.get('cross-origin-embedder-policy');
-			this.log(
-				coep === 'credentialless' || coep === 'require-corp' ? 'PASS' : 'WARN',
-				`Cross-Origin-Embedder-Policy: ${coep ?? '(none)'}`
 			);
 
 			const corp = headers.get('cross-origin-resource-policy');
