@@ -27,3 +27,7 @@ src/docs/
 
 # Brainstorming sessions
 .superpowers/
+
+# Playwright artifacts
+/test-results/
+/playwright-report/
