@@ -3,40 +3,18 @@ import type { RequestHandler } from './$types';
 import { issueSessionCookie } from '$lib/server/session';
 import { logVisitor } from '$lib/server/visitor-log';
 import { authAttemptFailed, clearAuthLockout, isAuthLockedOut } from '$lib/server/rate-limit';
+import { verifyFirebaseIdToken, projectIdFromConfig } from '$lib/server/firebase-token';
 
 const SESSION_TTL_SECONDS = 60 * 60;
-
-interface TokenInfo {
-	user_id?: string;
-	sub?: string;
-	email?: string;
-	exp?: number | string;
-}
-
-async function verifyFirebaseIdToken(idToken: string): Promise<{
-	uid: string;
-	email: string | null;
-} | null> {
-	const res = await fetch(
-		`https://www.googleapis.com/oauth2/v3/tokeninfo?id_token=${encodeURIComponent(idToken)}`
-	);
-	if (!res.ok) return null;
-	const info = (await res.json()) as TokenInfo;
-	const uid = info.user_id ?? info.sub;
-	if (typeof uid !== 'string' || uid.length === 0) return null;
-	const exp =
-		typeof info.exp === 'string' ? parseInt(info.exp, 10) : (info.exp as number | undefined);
-	if (!Number.isFinite(exp) || (exp as number) * 1000 < Date.now()) return null;
-	return { uid, email: typeof info.email === 'string' ? info.email : null };
-}
 
 export const POST: RequestHandler = async ({ request, cookies, platform, getClientAddress }) => {
 	const ip = request.headers.get('cf-connecting-ip') ?? getClientAddress() ?? 'unknown';
 	const kv = platform?.env?.VISITOR_LOG;
 	const sessionSecret = platform?.env?.SESSION_SECRET ?? '';
 	const salt = platform?.env?.VISITOR_LOG_SALT ?? '';
+	const projectId = projectIdFromConfig(platform?.env?.VITE_FIREBASE_CONFIG);
 
-	if (!sessionSecret || sessionSecret.length < 32) {
+	if (!sessionSecret || sessionSecret.length < 32 || !projectId) {
 		return json({ error: 'server-misconfigured' }, { status: 500 });
 	}
 
@@ -57,7 +35,7 @@ export const POST: RequestHandler = async ({ request, cookies, platform, getClie
 		return json({ error: 'missing-id-token' }, { status: 400 });
 	}
 
-	const info = await verifyFirebaseIdToken(body.idToken);
+	const info = await verifyFirebaseIdToken(body.idToken, projectId);
 	if (!info) {
 		if (kv) await authAttemptFailed(kv, ip);
 		return json({ error: 'invalid-id-token' }, { status: 401 });

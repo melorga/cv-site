@@ -18,6 +18,7 @@ declare global {
 				VISITOR_LOG?: KVNamespace;
 				VISITOR_LOG_SALT?: string;
 				SESSION_SECRET?: string;
+				VITE_FIREBASE_CONFIG?: string;
 				ALLOW_EVAL?: string;
 				E2E_MODE?: string;
 			};
