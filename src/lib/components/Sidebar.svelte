@@ -28,7 +28,7 @@
 			class="text-xs text-fg-muted hover:text-accent transition-colors">LinkedIn ↗</a
 		>
 		<a
-			href="https://calendly.com/mariano-elorga/15min"
+			href="https://calendly.com/melorga"
 			rel="noopener noreferrer"
 			target="_blank"
 			class="text-xs text-fg-muted hover:text-accent transition-colors">Calendar ↗</a

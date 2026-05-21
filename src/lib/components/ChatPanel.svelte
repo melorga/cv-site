@@ -12,7 +12,7 @@
 	let error: string | null = $state(null);
 	let listEl: HTMLDivElement | undefined = $state();
 
-	const CALENDLY_URL = 'https://calendly.com/mariano-elorga/15min';
+	const CALENDLY_URL = 'https://calendly.com/melorga';
 	const MAILTO_FALLBACK = 'mailto:hello@melorga.dev?subject=Quick%20chat%20%E2%80%94%2015%20min';
 
 	async function send(text: string) {

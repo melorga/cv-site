@@ -15,7 +15,7 @@
 	let busy = $state(false);
 	let error: string | null = $state(null);
 
-	const CALENDLY_URL = 'https://calendly.com/mariano-elorga/15min';
+	const CALENDLY_URL = 'https://calendly.com/melorga';
 	const MAILTO_FALLBACK = 'mailto:hello@melorga.dev?subject=Quick%20chat%20%E2%80%94%2015%20min';
 
 	async function defaultSignIn(em: string, pw: string, m: 'login' | 'register'): Promise<void> {
