@@ -55,20 +55,6 @@
 		"vitest": "^4.1.5",
 		"wrangler": "4.90.0"
 	},
-	"pnpm": {
-		"onlyBuiltDependencies": [
-			"@firebase/util",
-			"@parcel/watcher",
-			"@tailwindcss/oxide",
-			"esbuild",
-			"protobufjs",
-			"sharp",
-			"workerd"
-		],
-		"overrides": {
-			"protobufjs@<7.5.5": ">=7.5.5"
-		}
-	},
 	"dependencies": {
 		"firebase": "^12.13.0",
 		"groq-sdk": "^1.1.2",
