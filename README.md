@@ -249,6 +249,15 @@ const response = await fetch('https://api.groq.com/openai/v1/chat/completions', 
 ### **Automated Testing**
 
 ```bash
+# Unit tests (Vitest)
+pnpm test
+
+# End-to-end integration tests (Playwright)
+pnpm test:integration
+
+# Debug an integration spec in a real browser
+pnpm test:integration:headed -- tests/integration/auth-flow.spec.ts
+
 # Security vulnerability scanning
 pnpm test:security
 
@@ -258,6 +267,8 @@ pnpm test:with-server
 # TypeScript compilation check
 pnpm check
 ```
+
+The integration suite runs against `pnpm preview` on port 4173 with `E2E_MODE=true`. This env var enables an `e2e_auth` cookie bypass in `src/routes/+layout.server.ts` so specs can simulate authenticated sessions without real Firebase calls. **`E2E_MODE` must never be set in production** — `wrangler.toml` carries a top-of-file safety comment to this effect.
 
 ### **Performance Monitoring**
 
