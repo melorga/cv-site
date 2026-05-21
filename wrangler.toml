@@ -6,6 +6,13 @@
 #
 # ⚠️  E2E_MODE is a TEST-ONLY env var. It enables a test-only auth bypass in
 #     +layout.server.ts (Layer 5). It MUST NEVER be set in production deploys.
+#
+# 💰 Firebase plan: Blaze (pay-as-you-go) as of 2026-05-21. STAY WITHIN FREE TIER.
+#    Only firebase/auth is in use (≤50k MAU is free). Server-side ID-token
+#    verification uses Google's free tokeninfo endpoint (Google OAuth API, not
+#    Firebase) → consumes no Firebase quota.
+#    Do NOT add Firestore, Storage, Cloud Functions, or Realtime DB without
+#    explicit owner approval and a cost projection.
 
 [vars]
 GROQ_API_KEY = "$GROQ_API_KEY"
