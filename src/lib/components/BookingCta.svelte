@@ -5,10 +5,31 @@
 		variant = 'solid'
 	}: { calendlyUrl: string; mailtoFallback: string; variant?: 'solid' | 'ghost' } = $props();
 
-	function openBooking() {
-		const Calendly = (
-			window as unknown as { Calendly?: { initPopupWidget: (opts: { url: string }) => void } }
-		).Calendly;
+	const WIDGET_SRC = 'https://assets.calendly.com/assets/external/widget.js';
+	type CalendlyApi = { initPopupWidget: (opts: { url: string }) => void };
+	let loadPromise: Promise<CalendlyApi | null> | null = null;
+
+	function getCalendly(): CalendlyApi | undefined {
+		return (window as unknown as { Calendly?: CalendlyApi }).Calendly;
+	}
+
+	function loadCalendly(): Promise<CalendlyApi | null> {
+		if (loadPromise) return loadPromise;
+		const existing = getCalendly();
+		if (existing) return Promise.resolve(existing);
+		loadPromise = new Promise((resolve) => {
+			const s = document.createElement('script');
+			s.src = WIDGET_SRC;
+			s.async = true;
+			s.onload = () => resolve(getCalendly() ?? null);
+			s.onerror = () => resolve(null);
+			document.head.appendChild(s);
+		});
+		return loadPromise;
+	}
+
+	async function openBooking() {
+		const Calendly = (await loadCalendly()) ?? getCalendly() ?? null;
 		if (Calendly && typeof Calendly.initPopupWidget === 'function') {
 			Calendly.initPopupWidget({ url: calendlyUrl });
 		} else {

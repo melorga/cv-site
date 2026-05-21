@@ -27,7 +27,6 @@
 	<title>Mariano Elorga — AWS Solutions Architect</title>
 	<link rel="preconnect" href="https://assets.calendly.com" />
 	<link rel="stylesheet" href="https://assets.calendly.com/assets/external/widget.css" />
-	<script src="https://assets.calendly.com/assets/external/widget.js" async></script>
 </svelte:head>
 
 {#if data.user}
