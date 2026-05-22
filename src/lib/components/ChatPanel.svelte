@@ -31,7 +31,7 @@
 			if (!res.ok) {
 				if (res.status === 429) {
 					error = "Slow down — you've sent a lot recently. Try again in a moment.";
-				} else if (res.status === 403) {
+				} else if (res.status === 401 || res.status === 403) {
 					error = 'Your session needs to refresh. Please sign in again.';
 				} else {
 					error = 'The assistant is taking a moment. Try again?';

@@ -62,9 +62,9 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 
 		console.log(`[SECURITY] Message validation passed for IP: ${clientIP}`);
 
-		// CAPTCHA verification is enforced by middleware using the httpOnly captcha_session cookie.
-		// No need to accept or validate any client-provided CAPTCHA tokens here.
-		console.log('[CAPTCHA] Enforcement handled by middleware via captcha_session cookie');
+		// Authentication is enforced by hooks.server.ts middleware via the signed
+		// firebase_session cookie. Unauthenticated requests are rejected with 401
+		// before they reach this handler.
 
 		// Validate environment variables
 		if (!platform?.env?.GROQ_API_KEY) {
