@@ -1,5 +1,6 @@
 <script lang="ts">
 	import BookingCta from './BookingCta.svelte';
+	import { CALENDLY_URL, MAILTO_FALLBACK } from '$lib/profile';
 
 	let {
 		onAuthenticated,
@@ -14,9 +15,6 @@
 	let mode: 'login' | 'register' = $state('login');
 	let busy = $state(false);
 	let error: string | null = $state(null);
-
-	const CALENDLY_URL = 'https://calendly.com/melorga';
-	const MAILTO_FALLBACK = 'mailto:hello@melorga.dev?subject=Quick%20chat%20%E2%80%94%2015%20min';
 
 	async function defaultSignIn(em: string, pw: string, m: 'login' | 'register'): Promise<void> {
 		const { signIn } = await import('$lib/firebase');

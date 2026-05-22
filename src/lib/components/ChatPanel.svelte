@@ -3,6 +3,7 @@
 	import MessageBubble from './MessageBubble.svelte';
 	import SuggestionChips from './SuggestionChips.svelte';
 	import BookingCta from './BookingCta.svelte';
+	import { CALENDLY_URL, MAILTO_FALLBACK, PROFILE_FIRST_NAME, PROFILE_ROLE } from '$lib/profile';
 
 	let { initialPrompts }: { initialPrompts: string[] } = $props();
 
@@ -11,9 +12,6 @@
 	let inflight = $state(false);
 	let error: string | null = $state(null);
 	let listEl: HTMLDivElement | undefined = $state();
-
-	const CALENDLY_URL = 'https://calendly.com/melorga';
-	const MAILTO_FALLBACK = 'mailto:hello@melorga.dev?subject=Quick%20chat%20%E2%80%94%2015%20min';
 
 	async function send(text: string) {
 		const trimmed = text.trim();
@@ -71,8 +69,8 @@
 					Ask me <span class="text-accent">anything</span>.
 				</div>
 				<p class="mt-3 text-sm text-fg-muted">
-					I'm Mariano — AWS Solutions Architect. The AI knows my work, projects, and how I think. Or
-					grab a quick call on the calendar.
+					{#if PROFILE_FIRST_NAME}I'm {PROFILE_FIRST_NAME}{#if PROFILE_ROLE} — {PROFILE_ROLE}{/if}.{/if}
+					The AI knows my work, projects, and how I think. Or grab a quick call on the calendar.
 				</p>
 			</div>
 		{:else}
@@ -102,7 +100,7 @@
 				<input
 					type="text"
 					bind:value={draft}
-					placeholder="Ask anything about Mariano…"
+					placeholder={PROFILE_FIRST_NAME ? `Ask anything about ${PROFILE_FIRST_NAME}…` : 'Ask anything…'}
 					autocomplete="off"
 					maxlength="1000"
 					disabled={inflight}

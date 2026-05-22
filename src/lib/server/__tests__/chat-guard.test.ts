@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { checkInput, filterOutput, HARDENED_SYSTEM_PROMPT } from '../chat-guard';
+import { checkInput, filterOutput, buildHardenedSystemPrompt } from '../chat-guard';
 
 describe('chat-guard / input', () => {
 	it('allows ordinary questions', () => {
@@ -68,8 +68,38 @@ describe('chat-guard / output', () => {
 
 describe('chat-guard / system prompt', () => {
 	it('contains explicit refusal patterns', () => {
-		expect(HARDENED_SYSTEM_PROMPT).toMatch(/never reveal/i);
-		expect(HARDENED_SYSTEM_PROMPT).toMatch(/role-?switch/i);
-		expect(HARDENED_SYSTEM_PROMPT).toMatch(/refuse/i);
+		const prompt = buildHardenedSystemPrompt({
+			name: 'Test Person',
+			role: 'Software Engineer',
+			context: 'Some context'
+		});
+		expect(prompt).toMatch(/never reveal/i);
+		expect(prompt).toMatch(/role-?switch/i);
+		expect(prompt).toMatch(/refuse/i);
+	});
+
+	it('interpolates name, role, and context', () => {
+		const prompt = buildHardenedSystemPrompt({
+			name: 'Test Person',
+			role: 'Software Engineer',
+			context: 'CONTEXT_SENTINEL_VALUE'
+		});
+		expect(prompt).toContain('Test Person');
+		expect(prompt).toContain('a Software Engineer');
+		expect(prompt).toContain('CONTEXT_SENTINEL_VALUE');
+	});
+
+	it('uses "an" before vowel-leading roles', () => {
+		const prompt = buildHardenedSystemPrompt({
+			name: 'X',
+			role: 'AWS Solutions Architect',
+			context: ''
+		});
+		expect(prompt).toContain('an AWS Solutions Architect');
+	});
+
+	it('gracefully handles missing name and role', () => {
+		const prompt = buildHardenedSystemPrompt({ name: '', role: '', context: '' });
+		expect(prompt).toContain('the operator of this site');
 	});
 });

@@ -4,17 +4,26 @@
 # before any [table] header in TOML — otherwise they're parsed as members
 # of the preceding table and wrangler logs "missing pages_build_output_dir".
 #
-# ─── Secrets (set via Cloudflare dashboard or `wrangler pages secret put`) ───
-#   GROQ_API_KEY             — Groq API key (server)
+# ─── Server-only secrets (set via Cloudflare dashboard or `wrangler pages secret put`) ───
+#   GROQ_API_KEY             — Groq API key
 #   TURNSTILE_SECRET         — Cloudflare Turnstile server secret
 #   SESSION_SECRET           — 48 random bytes for HMAC session-cookie signing
 #   VISITOR_LOG_SALT         — 48 random bytes for HMAC IP hashing
-#   VITE_FIREBASE_CONFIG     — Firebase config JSON (client; Vite-exposed)
-#   VITE_TURNSTILE_SITEKEY   — Turnstile site key (client; Vite-exposed)
+#
+# ─── Client-exposed (VITE_* — inlined into the browser bundle at build time) ───
+#   VITE_FIREBASE_CONFIG     — Firebase config JSON
+#   VITE_TURNSTILE_SITEKEY   — Turnstile site key (public)
+#   VITE_PROFILE_NAME        — Full name shown in sidebar + page title (e.g. "Jane Doe")
+#   VITE_PROFILE_ROLE        — Headline role (e.g. "Cloud Architect")
+#   VITE_PROFILE_LOCATION    — Sidebar tagline (e.g. "Madrid · Open to roles")
+#   VITE_CALENDLY_URL        — e.g. https://calendly.com/<username>
+#   VITE_LINKEDIN_URL        — e.g. https://www.linkedin.com/in/<handle>
+#   VITE_CONTACT_EMAIL       — e.g. you@example.com (code builds the mailto URI)
 #
 # Cloudflare Pages does NOT substitute ${VAR} placeholders in this file —
 # the dashboard secrets are the source of truth at runtime. The [vars] block
-# is intentionally absent to avoid confusion.
+# is intentionally absent to avoid confusion. See .env.example for the full
+# list with descriptions; for local dev, copy to .env.local.
 #
 # ─── Test-only ───
 # ⚠️  E2E_MODE enables a test-only auth bypass in +layout.server.ts (Layer 5).

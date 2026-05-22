@@ -32,3 +32,4 @@ src/docs/
 /test-results/
 /playwright-report/
 /.playwright-mcp/
+/.claude/

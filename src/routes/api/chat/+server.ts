@@ -1,7 +1,7 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import Groq from 'groq-sdk';
-import { checkInput, filterOutput, HARDENED_SYSTEM_PROMPT } from '$lib/server/chat-guard';
+import { checkInput, filterOutput, buildHardenedSystemPrompt } from '$lib/server/chat-guard';
 
 // Utility function for vector similarity (reserved for future use)
 // function cosineSimilarity(a: number[], b: number[]): number {
@@ -166,7 +166,11 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 		// Build context from retrieved chunks
 		const context = contextChunks.join('\n\n');
 
-		const systemPrompt = HARDENED_SYSTEM_PROMPT.replace('{context}', context);
+		const systemPrompt = buildHardenedSystemPrompt({
+			name: platform?.env?.VITE_PROFILE_NAME ?? '',
+			role: platform?.env?.VITE_PROFILE_ROLE ?? '',
+			context
+		});
 
 		console.log('Sending request to Groq API');
 

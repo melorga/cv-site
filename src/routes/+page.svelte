@@ -2,6 +2,7 @@
 	import AuthGate from '$lib/components/AuthGate.svelte';
 	import Sidebar from '$lib/components/Sidebar.svelte';
 	import ChatPanel from '$lib/components/ChatPanel.svelte';
+	import { PAGE_TITLE } from '$lib/profile';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -24,7 +25,7 @@
 </script>
 
 <svelte:head>
-	<title>Mariano Elorga — AWS Solutions Architect</title>
+	<title>{PAGE_TITLE}</title>
 	<link rel="preconnect" href="https://assets.calendly.com" />
 	<link rel="stylesheet" href="https://assets.calendly.com/assets/external/widget.css" />
 </svelte:head>

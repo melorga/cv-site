@@ -11,12 +11,13 @@ const user: User = {
 };
 
 describe('Sidebar', () => {
-	it('renders the owner name (Mariano), not the visitor name', () => {
+	it('renders the owner name from VITE_PROFILE_NAME, not the visitor name', () => {
+		// Fixture set in vitest.setup.ts → VITE_PROFILE_NAME = "Test Owner"
 		const { getByText } = render(Sidebar, { user, onSignOut: () => {} });
-		expect(getByText('Mariano Elorga')).toBeInTheDocument();
+		expect(getByText('Test Owner')).toBeInTheDocument();
 	});
 
-	it('renders LinkedIn and Calendar links', () => {
+	it('renders LinkedIn and Calendar links when VITE_*_URL env vars are set', () => {
 		const { getByRole } = render(Sidebar, { user, onSignOut: () => {} });
 		expect(getByRole('link', { name: /linkedin/i })).toBeInTheDocument();
 		expect(getByRole('link', { name: /calendar/i })).toBeInTheDocument();

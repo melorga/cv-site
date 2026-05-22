@@ -19,6 +19,8 @@ declare global {
 				VISITOR_LOG_SALT?: string;
 				SESSION_SECRET?: string;
 				VITE_FIREBASE_CONFIG?: string;
+				VITE_PROFILE_NAME?: string;
+				VITE_PROFILE_ROLE?: string;
 				ALLOW_EVAL?: string;
 				E2E_MODE?: string;
 			};

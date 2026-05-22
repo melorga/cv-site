@@ -1,6 +1,13 @@
 <script lang="ts">
 	import type { User } from '$lib/types';
 	import ThemeToggle from './ThemeToggle.svelte';
+	import {
+		CALENDLY_URL,
+		LINKEDIN_URL,
+		PROFILE_NAME,
+		PROFILE_ROLE,
+		PROFILE_LOCATION
+	} from '$lib/profile';
 
 	let { user, onSignOut }: { user: User; onSignOut: () => void } = $props();
 </script>
@@ -14,25 +21,35 @@
 			aria-hidden="true"
 		></div>
 		<div>
-			<div class="text-sm font-semibold text-fg leading-tight">Mariano Elorga</div>
-			<div class="text-xs text-fg-muted mt-0.5">AWS Solutions Architect</div>
+			{#if PROFILE_NAME}
+				<div class="text-sm font-semibold text-fg leading-tight">{PROFILE_NAME}</div>
+			{/if}
+			{#if PROFILE_ROLE}
+				<div class="text-xs text-fg-muted mt-0.5">{PROFILE_ROLE}</div>
+			{/if}
 		</div>
-		<div class="text-[11px] text-fg-subtle">Madrid · Open to roles</div>
+		{#if PROFILE_LOCATION}
+			<div class="text-[11px] text-fg-subtle">{PROFILE_LOCATION}</div>
+		{/if}
 	</div>
 
 	<nav class="flex flex-col gap-1.5">
-		<a
-			href="https://www.linkedin.com/in/mariano-elorga"
-			rel="noopener noreferrer"
-			target="_blank"
-			class="text-xs text-fg-muted hover:text-accent transition-colors">LinkedIn ↗</a
-		>
-		<a
-			href="https://calendly.com/melorga"
-			rel="noopener noreferrer"
-			target="_blank"
-			class="text-xs text-fg-muted hover:text-accent transition-colors">Calendar ↗</a
-		>
+		{#if LINKEDIN_URL}
+			<a
+				href={LINKEDIN_URL}
+				rel="noopener noreferrer"
+				target="_blank"
+				class="text-xs text-fg-muted hover:text-accent transition-colors">LinkedIn ↗</a
+			>
+		{/if}
+		{#if CALENDLY_URL}
+			<a
+				href={CALENDLY_URL}
+				rel="noopener noreferrer"
+				target="_blank"
+				class="text-xs text-fg-muted hover:text-accent transition-colors">Calendar ↗</a
+			>
+		{/if}
 	</nav>
 
 	<div class="flex-1"></div>
