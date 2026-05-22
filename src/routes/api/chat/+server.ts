@@ -175,6 +175,9 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 		console.log('Sending request to Groq API');
 
 		// Call Groq API
+		// Model: llama-3.1-8b-instant (8B, fast, free-tier friendly). The prior
+		// 'llama3-8b-8192' was deprecated by Groq on 2025-08-30 — any call to it
+		// throws a "model_decommissioned" error.
 		const completion = await groq.chat.completions.create({
 			messages: [
 				{
@@ -186,7 +189,7 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 					content: message
 				}
 			],
-			model: 'llama3-8b-8192',
+			model: 'llama-3.1-8b-instant',
 			temperature: 0.7,
 			max_tokens: 1000
 		});
