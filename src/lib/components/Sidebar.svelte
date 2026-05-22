@@ -6,7 +6,8 @@
 		LINKEDIN_URL,
 		PROFILE_NAME,
 		PROFILE_ROLE,
-		PROFILE_LOCATION
+		PROFILE_LOCATION,
+		PROFILE_INITIAL
 	} from '$lib/profile';
 
 	let { user, onSignOut }: { user: User; onSignOut: () => void } = $props();
@@ -17,9 +18,13 @@
 >
 	<div class="flex flex-col gap-3">
 		<div
-			class="h-12 w-12 rounded-full bg-gradient-to-br from-accent to-orange-700"
+			class="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-accent to-orange-700"
 			aria-hidden="true"
-		></div>
+		>
+			{#if PROFILE_INITIAL}
+				<span class="text-lg font-black leading-none text-on-accent">{PROFILE_INITIAL}</span>
+			{/if}
+		</div>
 		<div>
 			{#if PROFILE_NAME}
 				<div class="text-sm font-semibold text-fg leading-tight">{PROFILE_NAME}</div>
@@ -33,7 +38,7 @@
 		{/if}
 	</div>
 
-	<nav class="flex flex-col gap-1.5">
+	<nav class="flex flex-col gap-1.5 border-t border-line pt-4">
 		{#if LINKEDIN_URL}
 			<a
 				href={LINKEDIN_URL}

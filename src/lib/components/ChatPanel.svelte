@@ -16,7 +16,7 @@
 	// Built up-front so Svelte's compiler doesn't strip the leading space inside
 	// an {#if} block (an issue we hit when interpolating inline).
 	const intro = PROFILE_FIRST_NAME
-		? `I'm ${PROFILE_FIRST_NAME}${PROFILE_ROLE ? ` — ${PROFILE_ROLE}` : ''}.`
+		? `I'm ${PROFILE_FIRST_NAME}${PROFILE_ROLE ? `, ${PROFILE_ROLE}` : ''}.`
 		: '';
 
 	async function send(text: string) {
@@ -63,14 +63,19 @@
 </script>
 
 <section class="flex h-full w-full flex-col">
-	<header class="flex items-center justify-between border-b border-line px-6 py-3">
-		<div class="text-xs font-bold tracking-widest text-accent">M · E</div>
+	<header class="flex items-center justify-end border-b border-line px-6 py-3">
 		<BookingCta calendlyUrl={CALENDLY_URL} mailtoFallback={MAILTO_FALLBACK} />
 	</header>
 
-	<div bind:this={listEl} class="flex-1 overflow-y-auto scrollbar-thin px-6 py-6">
+	<div
+		bind:this={listEl}
+		class="flex-1 overflow-y-auto scrollbar-thin px-6 py-6"
+		class:flex={messages.length === 0}
+		class:items-center={messages.length === 0}
+		class:justify-center={messages.length === 0}
+	>
 		{#if messages.length === 0}
-			<div class="mx-auto max-w-prose pt-6 hero-glow">
+			<div class="mx-auto max-w-prose hero-glow">
 				<div class="text-3xl font-bold tracking-tight text-fg leading-tight md:text-4xl">
 					Ask me <span class="text-accent">anything</span>.
 				</div>
@@ -115,9 +120,21 @@
 					type="submit"
 					disabled={inflight || !draft.trim()}
 					aria-label="Send"
-					class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-accent font-bold text-on-accent transition-opacity disabled:opacity-40"
-					>↑</button
+					class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-accent text-on-accent transition-opacity disabled:opacity-40"
 				>
+					<svg
+						viewBox="0 0 24 24"
+						class="h-3.5 w-3.5"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2.5"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						aria-hidden="true"
+					>
+						<path d="M12 19V5M5 12l7-7 7 7" />
+					</svg>
+				</button>
 			</form>
 		</div>
 	</footer>

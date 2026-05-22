@@ -30,6 +30,7 @@ export const LINKEDIN_URL = normalizeUrl(import.meta.env.VITE_LINKEDIN_URL ?? ''
 export const CONTACT_EMAIL = import.meta.env.VITE_CONTACT_EMAIL ?? '';
 
 export const PROFILE_FIRST_NAME = PROFILE_NAME.split(/\s+/)[0] ?? '';
+export const PROFILE_INITIAL = PROFILE_FIRST_NAME.charAt(0).toUpperCase();
 
 export const PAGE_TITLE = PROFILE_NAME
 	? PROFILE_ROLE
