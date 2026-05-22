@@ -33,3 +33,8 @@ src/docs/
 /playwright-report/
 /.playwright-mcp/
 /.claude/
+
+# Local screenshots dropped at repo root (e.g. design reviews). Move into
+# /docs if you want a screenshot kept under version control.
+/Screenshot*.png
+/Screen*.png
