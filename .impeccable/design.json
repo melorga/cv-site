@@ -1,0 +1,295 @@
+{
+	"schemaVersion": 2,
+	"generatedAt": "2026-05-22T00:00:00Z",
+	"title": "Design System: Melorga CV",
+	"extensions": {
+		"colorMeta": {
+			"hearth-orange": {
+				"role": "primary",
+				"displayName": "Hearth Orange",
+				"canonical": "oklch(75% 0.15 50)",
+				"tonalRamp": [
+					"#1a0700",
+					"#3b1100",
+					"#5e1f00",
+					"#852e08",
+					"#b04515",
+					"#dc6024",
+					"#ff8a4c",
+					"#ffc5a5"
+				]
+			},
+			"hearth-orange-hover": {
+				"role": "primary",
+				"displayName": "Hearth Orange (hover)",
+				"canonical": "oklch(72% 0.16 47)"
+			},
+			"hearth-orange-soft": {
+				"role": "primary",
+				"displayName": "Hearth Orange Spill",
+				"canonical": "oklch(75% 0.15 50 / 0.16)"
+			},
+			"on-hearth": {
+				"role": "neutral",
+				"displayName": "On Hearth (Studio Black)",
+				"canonical": "oklch(18% 0.005 50)"
+			},
+			"studio-black": {
+				"role": "neutral",
+				"displayName": "Studio Black",
+				"canonical": "oklch(18% 0.005 50)",
+				"tonalRamp": [
+					"#040404",
+					"#0a0a0a",
+					"#111111",
+					"#1a1a1a",
+					"#2a2a2a",
+					"#3a3a3a",
+					"#525252",
+					"#6b7280"
+				]
+			},
+			"workshop-dusk": {
+				"role": "neutral",
+				"displayName": "Workshop Dusk",
+				"canonical": "oklch(15% 0.005 50)"
+			},
+			"bench-slate": {
+				"role": "neutral",
+				"displayName": "Bench Slate",
+				"canonical": "oklch(22% 0.005 50)"
+			},
+			"workbench-cream": {
+				"role": "neutral",
+				"displayName": "Workbench Cream",
+				"canonical": "oklch(97% 0.003 80)",
+				"tonalRamp": [
+					"#1a1a18",
+					"#2a2a26",
+					"#454541",
+					"#6b7280",
+					"#a8a29e",
+					"#d6d3d1",
+					"#e7e5e4",
+					"#f5f5f4"
+				]
+			},
+			"sawdust": {
+				"role": "neutral",
+				"displayName": "Sawdust",
+				"canonical": "oklch(75% 0.01 80)"
+			},
+			"cold-pewter": {
+				"role": "neutral",
+				"displayName": "Cold Pewter",
+				"canonical": "oklch(54% 0.02 250)"
+			},
+			"joist": {
+				"role": "neutral",
+				"displayName": "Joist",
+				"canonical": "oklch(26% 0.003 50)"
+			},
+			"plank": {
+				"role": "neutral",
+				"displayName": "Plank",
+				"canonical": "oklch(33% 0.003 50)"
+			}
+		},
+		"typographyMeta": {
+			"display": {
+				"displayName": "Display",
+				"purpose": "AuthGate hero headline only. Compressed, stamped feel."
+			},
+			"headline": {
+				"displayName": "Headline",
+				"purpose": "Empty-state hero inside the chat panel."
+			},
+			"title": {
+				"displayName": "Title",
+				"purpose": "Sidebar identity (profile name). Reserved for that slot."
+			},
+			"body": {
+				"displayName": "Body",
+				"purpose": "Paragraphs and message bubbles. Capped at 65-75ch."
+			},
+			"label": {
+				"displayName": "Label",
+				"purpose": "Form labels and micro-headings. All-caps, wide tracking."
+			},
+			"wordmark": {
+				"displayName": "Wordmark",
+				"purpose": "The M·E stamp. Used on AuthGate header only."
+			}
+		},
+		"shadows": [],
+		"motion": [
+			{
+				"name": "ease-out-soft",
+				"value": "cubic-bezier(0.16, 1, 0.3, 1)",
+				"purpose": "Default easing. Exponential ease-out; no bounce, no elastic."
+			},
+			{
+				"name": "duration-fast",
+				"value": "150ms",
+				"purpose": "Color/border state transitions on hover."
+			},
+			{
+				"name": "duration-normal",
+				"value": "250ms",
+				"purpose": "Fade-in entries (animate-fade-in)."
+			},
+			{
+				"name": "duration-slow",
+				"value": "400ms",
+				"purpose": "Reserved for orchestrated transitions; rarely used."
+			},
+			{
+				"name": "accent-drift",
+				"value": "8s ease-out-soft infinite",
+				"purpose": "Subtle background drift of the hero-glow on AuthGate. Must respect prefers-reduced-motion."
+			}
+		],
+		"breakpoints": [
+			{ "name": "sm", "value": "640px" },
+			{ "name": "md", "value": "768px" },
+			{ "name": "lg", "value": "1024px" },
+			{ "name": "xl", "value": "1280px" }
+		]
+	},
+	"components": [
+		{
+			"name": "Primary Button",
+			"kind": "button",
+			"refersTo": "button-primary",
+			"description": "The workshop hammer. Solid orange pill, the loudest action on the screen. One per screen.",
+			"html": "<button class=\"ds-btn-primary\">Sign in →</button>",
+			"css": ".ds-btn-primary { background: #ff8a4c; color: #111111; border: 0; border-radius: 9999px; padding: 12px 22px; font-family: 'Inter', system-ui, sans-serif; font-weight: 600; font-size: 0.875rem; cursor: pointer; transition: background 150ms cubic-bezier(0.16, 1, 0.3, 1); } .ds-btn-primary:hover { background: #ff7a36; } .ds-btn-primary:focus-visible { outline: 2px solid #ff8a4c; outline-offset: 2px; } .ds-btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }"
+		},
+		{
+			"name": "Ghost Button",
+			"kind": "button",
+			"refersTo": "button-ghost",
+			"description": "The chalk mark. Transparent with a Plank border. Used for 'and' actions, never primary.",
+			"html": "<button class=\"ds-btn-ghost\">📅 Book 15 min</button>",
+			"css": ".ds-btn-ghost { background: transparent; color: #f5f5f4; border: 1px solid #3a3a3a; border-radius: 9999px; padding: 8px 16px; font-family: 'Inter', system-ui, sans-serif; font-weight: 500; font-size: 0.75rem; cursor: pointer; transition: border-color 150ms cubic-bezier(0.16, 1, 0.3, 1), color 150ms cubic-bezier(0.16, 1, 0.3, 1); } .ds-btn-ghost:hover { border-color: #ff8a4c; color: #ff8a4c; } .ds-btn-ghost:focus-visible { outline: 2px solid #ff8a4c; outline-offset: 2px; }"
+		},
+		{
+			"name": "Suggestion Chip",
+			"kind": "chip",
+			"refersTo": "chip",
+			"description": "A prompt laid out on the workbench, ready to pick up. Pill-shaped, subtle until the lamp catches it on hover.",
+			"html": "<button class=\"ds-chip\">What is your AWS specialty?</button>",
+			"css": ".ds-chip { background: #1a1a1a; color: #a8a29e; border: 1px solid #2a2a2a; border-radius: 9999px; padding: 6px 12px; font-family: 'Inter', system-ui, sans-serif; font-weight: 400; font-size: 0.75rem; cursor: pointer; transition: border-color 150ms cubic-bezier(0.16, 1, 0.3, 1), color 150ms cubic-bezier(0.16, 1, 0.3, 1); } .ds-chip:hover { border-color: #ff8a4c; color: #f5f5f4; } .ds-chip:focus-visible { outline: 2px solid #ff8a4c; outline-offset: 2px; }"
+		},
+		{
+			"name": "Text Input",
+			"kind": "input",
+			"refersTo": "input",
+			"description": "A drawer. Flat at rest, border catches the lamp on focus.",
+			"html": "<div class=\"ds-input-group\"><label class=\"ds-input-label\">Email</label><input class=\"ds-input\" placeholder=\"you@company.com\" /></div>",
+			"css": ".ds-input-group { display: flex; flex-direction: column; gap: 4px; font-family: 'Inter', system-ui, sans-serif; } .ds-input-label { color: #6b7280; font-size: 0.6875rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.08em; } .ds-input { background: #1a1a1a; color: #f5f5f4; border: 1px solid #2a2a2a; border-radius: 6px; padding: 8px 12px; font-family: inherit; font-size: 0.875rem; transition: border-color 150ms cubic-bezier(0.16, 1, 0.3, 1); outline: none; } .ds-input::placeholder { color: #6b7280; } .ds-input:focus { border-color: #ff8a4c; }"
+		},
+		{
+			"name": "Send Button",
+			"kind": "button",
+			"refersTo": "send-button",
+			"description": "The workshop signal: hit it and the message goes up the channel.",
+			"html": "<button class=\"ds-send\" aria-label=\"Send\"><svg viewBox=\"0 0 24 24\" width=\"14\" height=\"14\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 19V5M5 12l7-7 7 7\"/></svg></button>",
+			"css": ".ds-send { width: 32px; height: 32px; background: #ff8a4c; color: #111111; border: 0; border-radius: 9999px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: background 150ms cubic-bezier(0.16, 1, 0.3, 1); } .ds-send:hover { background: #ff7a36; } .ds-send:focus-visible { outline: 2px solid #ff8a4c; outline-offset: 2px; } .ds-send:disabled { opacity: 0.4; cursor: not-allowed; }"
+		},
+		{
+			"name": "User Message Bubble",
+			"kind": "custom",
+			"refersTo": "message-user",
+			"description": "The visitor's voice. Hearth orange, right-aligned, with a small bottom-right tail.",
+			"html": "<div class=\"ds-msg-user-wrap\"><div class=\"ds-msg-user\" data-role=\"user\">What is your AWS specialty?</div></div>",
+			"css": ".ds-msg-user-wrap { display: flex; justify-content: flex-end; width: 100%; font-family: 'Inter', system-ui, sans-serif; } .ds-msg-user { max-width: 78%; background: #ff8a4c; color: #111111; font-weight: 500; font-size: 0.875rem; line-height: 1.55; padding: 8px 14px; border-radius: 14px; border-bottom-right-radius: 4px; }"
+		},
+		{
+			"name": "Assistant Message Bubble",
+			"kind": "custom",
+			"refersTo": "message-assistant",
+			"description": "The AI's voice. Bench slate, left-aligned, with a small bottom-left tail.",
+			"html": "<div class=\"ds-msg-asst-wrap\"><div class=\"ds-msg-asst\" data-role=\"assistant\">I specialise in serverless architectures on AWS, with a focus on event-driven systems.</div></div>",
+			"css": ".ds-msg-asst-wrap { display: flex; justify-content: flex-start; width: 100%; font-family: 'Inter', system-ui, sans-serif; } .ds-msg-asst { max-width: 78%; background: #1a1a1a; color: #f5f5f4; border: 1px solid #2a2a2a; font-weight: 400; font-size: 0.875rem; line-height: 1.55; padding: 8px 14px; border-radius: 14px; border-bottom-left-radius: 4px; }"
+		},
+		{
+			"name": "Avatar Badge",
+			"kind": "custom",
+			"refersTo": "avatar",
+			"description": "The workshop badge. Initial-stamped gradient circle in the sidebar.",
+			"html": "<div class=\"ds-avatar\" aria-hidden=\"true\"><span>M</span></div>",
+			"css": ".ds-avatar { width: 48px; height: 48px; border-radius: 9999px; background: linear-gradient(135deg, #ff8a4c, #c2410c); display: flex; align-items: center; justify-content: center; font-family: 'Inter', system-ui, sans-serif; } .ds-avatar span { color: #111111; font-weight: 900; font-size: 1.125rem; line-height: 1; }"
+		}
+	],
+	"narrative": {
+		"northStar": "The Warm Workshop",
+		"overview": "A craftsperson's room after sunset. Near-black walls, one warm lamp on the workbench, tools laid out with care. The warmth is hospitality; the dark is focus. The visitor is invited in to see how the work gets made, instead of being handed a marketing brochure about it. The accent orange is the lamp light: rare, concentrated, and the source of every highlight on the screen. The dark canvas is the studio walls, quiet and uniform so the work has somewhere to live. Body copy is the chalk on the workbench, secondary but legible. Nothing in the room is decorative without a reason. Tools have weight.",
+		"keyCharacteristics": [
+			"One source of warmth per screen. Lit from a single lamp, not many.",
+			"Tools have weight: borders are real, type is set tight, nothing decorative is loose on the bench.",
+			"Flat by default. The room is one floor, not a stack of cards.",
+			"Hospitality without ornament. The copy invites; it does not perform.",
+			"Restraint signals seniority. If something can be dropped without losing meaning, it is dropped."
+		],
+		"rules": [
+			{
+				"name": "The One Lamp Rule",
+				"body": "Hearth Orange appears on no more than 10% of any given screen surface. Each screen has exactly one primary warm source. If two compete on the same screen, one must dim to the ghost treatment.",
+				"section": "colors"
+			},
+			{
+				"name": "The Tinted Neutral Rule",
+				"body": "Never #000, never #fff. Studio Black and Workbench Cream are both tinted toward the lamp by a hair.",
+				"section": "colors"
+			},
+			{
+				"name": "The Lamp Is Always a Verb",
+				"body": "Hearth Orange marks action or who is speaking, never which section of the page this is. Section headings do not get orange.",
+				"section": "colors"
+			},
+			{
+				"name": "The Tight Type Rule",
+				"body": "Display and headline are set at -0.03em tracking. There is no looseness in the loudest type.",
+				"section": "typography"
+			},
+			{
+				"name": "The Three Sizes Rule",
+				"body": "Most screens use display or headline, plus body, plus label. Three sizes. Title is reserved for the sidebar identity. If you reach for a fourth size, the layout is overcomplicated.",
+				"section": "typography"
+			},
+			{
+				"name": "The Flat Bench Rule",
+				"body": "Surfaces are flat. The only depth signals allowed are the AuthGate hero-glow and the focus-visible outline. If a new component needs a drop-shadow to read, the layout is wrong.",
+				"section": "elevation"
+			},
+			{
+				"name": "The Hover Is Color, Not Lift",
+				"body": "Hover treatments shift border, text, or background tint. They never animate box-shadow or transform.",
+				"section": "elevation"
+			}
+		],
+		"dos": [
+			"Do keep Hearth Orange to ≤10% of any screen surface (The One Lamp Rule).",
+			"Do use tinted neutrals: Studio Black over true black, Workbench Cream over true white.",
+			"Do set display and headline at -0.03em tracking.",
+			"Do lazy-load the Calendly widget script inside BookingCta's click handler.",
+			"Do test contrast at AA mandatory, AAA where the muted hierarchy doesn't flatten.",
+			"Do respect prefers-reduced-motion on animate-fade-in and animate-accent-drift.",
+			"Do put the Booking CTA on every authenticated screen, top-right.",
+			"Do mark messages with data-role='user' / data-role='assistant' on the outer wrapper."
+		],
+		"donts": [
+			"Don't add box-shadow to cards, sidebars, or inputs (The Flat Bench Rule).",
+			"Don't ship a generic SaaS landing: gradient hero, three feature cards, testimonial carousel.",
+			"Don't ship a boring résumé PDF in HTML: header / experience / skills / education in a single column.",
+			"Don't chase the crypto / web3 neon aesthetic: neon-on-black, gradient mesh, glowing buttons.",
+			"Don't revive the glass-morphic 2021 dashboard: frosted blur cards, pastel gradients, drop-shadow stacks.",
+			"Don't use em dashes in body copy or UI text. Use commas, colons, periods, or parentheses.",
+			"Don't use border-left greater than 1px as a colored stripe accent.",
+			"Don't use background-clip: text with a gradient on any text.",
+			"Don't introduce a second accent color. The workshop has one lamp.",
+			"Don't add a static <script src='...'> tag for third-party widgets in <svelte:head>. The CSP strict-dynamic will block it."
+		]
+	}
+}
