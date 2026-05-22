@@ -76,11 +76,20 @@ try {
 
 	// Hint at the common failure modes.
 	const message = String(err?.message ?? err?.error?.message ?? '');
+	const code = String(err?.error?.code ?? '');
 	if (/invalid.*api.*key/i.test(message))
 		console.error('\nHint: rotate the key at https://console.groq.com/keys.');
 	else if (/model.*(decommissioned|not.*found)/i.test(message))
 		console.error(
 			`\nHint: model "${model}" may be retired. See https://console.groq.com/docs/deprecations.`
+		);
+	else if (/blocked at the project level/i.test(message) || code === 'model_permission_blocked_project')
+		console.error(
+			`\nHint: enable "${model}" at https://console.groq.com/settings/project/limits`
+		);
+	else if (/rate.*limit/i.test(message) || err?.status === 429)
+		console.error(
+			'\nHint: rate-limited. Check your plan at https://console.groq.com/settings/billing'
 		);
 
 	process.exit(1);
