@@ -13,6 +13,12 @@
 	let error: string | null = $state(null);
 	let listEl: HTMLDivElement | undefined = $state();
 
+	// Built up-front so Svelte's compiler doesn't strip the leading space inside
+	// an {#if} block (an issue we hit when interpolating inline).
+	const intro = PROFILE_FIRST_NAME
+		? `I'm ${PROFILE_FIRST_NAME}${PROFILE_ROLE ? ` — ${PROFILE_ROLE}` : ''}.`
+		: '';
+
 	async function send(text: string) {
 		const trimmed = text.trim();
 		if (!trimmed || inflight) return;
@@ -69,8 +75,7 @@
 					Ask me <span class="text-accent">anything</span>.
 				</div>
 				<p class="mt-3 text-sm text-fg-muted">
-					{#if PROFILE_FIRST_NAME}I'm {PROFILE_FIRST_NAME}{#if PROFILE_ROLE} — {PROFILE_ROLE}{/if}.{/if}
-					The AI knows my work, projects, and how I think. Or grab a quick call on the calendar.
+					{intro ? `${intro} ` : ''}The AI knows my work, projects, and how I think. Or grab a quick call on the calendar.
 				</p>
 			</div>
 		{:else}

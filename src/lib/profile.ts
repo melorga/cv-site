@@ -11,12 +11,22 @@
  * see /api/chat for the system-prompt parameterization.
  */
 
+/**
+ * Adds a default https:// scheme if missing. Lets the operator paste a bare
+ * domain like "calendly.com/me" into the Pages dashboard without breaking
+ * relative-URL links.
+ */
+function normalizeUrl(url: string): string {
+	if (!url) return '';
+	return /^[a-z][a-z0-9+.-]*:\/\//i.test(url) ? url : `https://${url}`;
+}
+
 export const PROFILE_NAME = import.meta.env.VITE_PROFILE_NAME ?? '';
 export const PROFILE_ROLE = import.meta.env.VITE_PROFILE_ROLE ?? '';
 export const PROFILE_LOCATION = import.meta.env.VITE_PROFILE_LOCATION ?? '';
 
-export const CALENDLY_URL = import.meta.env.VITE_CALENDLY_URL ?? '';
-export const LINKEDIN_URL = import.meta.env.VITE_LINKEDIN_URL ?? '';
+export const CALENDLY_URL = normalizeUrl(import.meta.env.VITE_CALENDLY_URL ?? '');
+export const LINKEDIN_URL = normalizeUrl(import.meta.env.VITE_LINKEDIN_URL ?? '');
 export const CONTACT_EMAIL = import.meta.env.VITE_CONTACT_EMAIL ?? '';
 
 export const PROFILE_FIRST_NAME = PROFILE_NAME.split(/\s+/)[0] ?? '';
