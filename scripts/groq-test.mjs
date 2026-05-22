@@ -16,7 +16,7 @@
 
 import Groq from 'groq-sdk';
 
-const DEFAULT_MODEL = 'llama-3.1-8b-instant';
+const FALLBACK_MODEL = 'llama-3.1-8b-instant';
 const DEFAULT_PROMPT = 'Reply with one short sentence to confirm you received this.';
 
 const apiKey = process.env.GROQ_API_KEY;
@@ -27,7 +27,9 @@ if (!apiKey) {
 	process.exit(2);
 }
 
-const model = process.argv[2] || DEFAULT_MODEL;
+// Precedence: positional arg > GROQ_MODEL env var > FALLBACK_MODEL. Mirrors
+// the server's /api/chat selection so this script tests what prod runs.
+const model = process.argv[2] || process.env.GROQ_MODEL || FALLBACK_MODEL;
 const prompt = process.argv[3] || DEFAULT_PROMPT;
 
 console.log(`→ model:  ${model}`);

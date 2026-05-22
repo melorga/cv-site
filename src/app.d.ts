@@ -13,6 +13,7 @@ declare global {
 		interface Platform {
 			env: {
 				GROQ_API_KEY: string;
+				GROQ_MODEL?: string;
 				TURNSTILE_SECRET: string;
 				PROFILE_VECTORS: KVNamespace;
 				VISITOR_LOG?: KVNamespace;

@@ -172,12 +172,13 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 			context
 		});
 
-		console.log('Sending request to Groq API');
+		// Model is dashboard-configurable via the GROQ_MODEL Pages env var. The
+		// default `llama-3.1-8b-instant` is the documented successor to
+		// `llama3-8b-8192` (deprecated 2025-08-30) and the most generous
+		// free-tier option for chat (14.4K RPD, 500K TPD).
+		const model = platform?.env?.GROQ_MODEL || 'llama-3.1-8b-instant';
+		console.log(`Sending request to Groq API (model: ${model})`);
 
-		// Call Groq API
-		// Model: llama-3.1-8b-instant (8B, fast, free-tier friendly). The prior
-		// 'llama3-8b-8192' was deprecated by Groq on 2025-08-30 — any call to it
-		// throws a "model_decommissioned" error.
 		const completion = await groq.chat.completions.create({
 			messages: [
 				{
@@ -189,7 +190,7 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 					content: message
 				}
 			],
-			model: 'llama-3.1-8b-instant',
+			model,
 			temperature: 0.7,
 			max_tokens: 1000
 		});

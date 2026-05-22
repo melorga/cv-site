@@ -6,6 +6,8 @@
 #
 # ─── Server-only secrets (set via Cloudflare dashboard or `wrangler pages secret put`) ───
 #   GROQ_API_KEY             — Groq API key
+#   GROQ_MODEL               — Groq model ID for /api/chat (e.g. llama-3.1-8b-instant).
+#                              If unset, code falls back to llama-3.1-8b-instant.
 #   TURNSTILE_SECRET         — Cloudflare Turnstile server secret
 #   SESSION_SECRET           — 48 random bytes for HMAC session-cookie signing
 #   VISITOR_LOG_SALT         — 48 random bytes for HMAC IP hashing
