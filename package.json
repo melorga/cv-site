@@ -17,6 +17,7 @@
 		"test:watch": "vitest",
 		"test:integration": "playwright test",
 		"test:integration:headed": "playwright test --headed",
+		"test:groq": "node --env-file-if-exists=.env.local scripts/groq-test.mjs",
 		"test:security": "node scripts/security-test.mjs",
 		"test:with-server": "node scripts/test-with-server.mjs",
 		"validate": "pnpm run format && pnpm run lint && pnpm run check",
